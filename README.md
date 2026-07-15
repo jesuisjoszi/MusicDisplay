@@ -65,21 +65,7 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot"
 
 Output: `build/libs/MusicDisplay-0.1.0.jar`
 
-## Project layout
 
-```
-src/main/java/com/jagod/spotify/   # Plugin logic
-src/main/resources/
-  manifest.json                    # Mod metadata
-  icon-256.png                     # Mod icon
-  Common/UI/Custom/Spotify/        # HUD + settings UI
-  Server/Languages/                # In-game translations
-```
-
-## Credits
-
-- OAuth flow inspired by [musicdisplay](https://github.com/realmichaelstetson/musicdisplay) (Minecraft)
-- Built with the [hytale-mod](https://maven.hytale-modding.info/) Gradle plugin
 
 ## License
 

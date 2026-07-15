@@ -47,6 +47,9 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         commandBuilder.set("#PanelTitle.TextSpans", Message.translation("spotify.spotify.ui.panel.title"));
         commandBuilder.set("#HintLine.TextSpans", Message.translation("spotify.spotify.ui.panel.hint"));
         commandBuilder.set("#SetupSpotifyButton.TextSpans", Message.translation("spotify.spotify.ui.panel.setup"));
+        commandBuilder.set("#SetupUrlLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.setupUrlHint"));
+        commandBuilder.set("#SetupUrlSection.Visible", false);
+        commandBuilder.set("#SetupUrlInput.Value", "");
         commandBuilder.set("#HudSettingsTitle.TextSpans", Message.translation("spotify.spotify.ui.panel.hudSettings"));
         commandBuilder.set("#PositionLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.position"));
         commandBuilder.set("#SizeLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.size"));
@@ -123,9 +126,24 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         if (playerRef == null || uuidComponent == null) {
             return;
         }
-        if (SpotifyOAuthService.beginSetup(playerRef, uuidComponent)) {
-            pushStatus(Message.translation("spotify.spotify.oauth.started"));
+        SpotifyOAuthService.SetupBeginResult result = SpotifyOAuthService.beginSetup(playerRef, uuidComponent);
+        if (result != null) {
+            pushSetupUrl(result.url());
+            pushStatus(
+                Message.translation(
+                    result.copiedToClipboard()
+                        ? "spotify.spotify.oauth.copiedToClipboard"
+                        : "spotify.spotify.oauth.copyFailed"
+                )
+            );
         }
+    }
+
+    private void pushSetupUrl(@Nonnull String url) {
+        UICommandBuilder builder = new UICommandBuilder();
+        builder.set("#SetupUrlSection.Visible", true);
+        builder.set("#SetupUrlInput.Value", url);
+        sendUpdate(builder, null, false);
     }
 
     private void toggleHud(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {

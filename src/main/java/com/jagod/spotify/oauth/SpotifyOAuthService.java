@@ -1,29 +1,39 @@
 package com.jagod.spotify.oauth;
 
+import com.jagod.spotify.SpotifyConstants;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public final class SpotifyOAuthService {
     private static final SpotifyOAuthServer SERVER = new SpotifyOAuthServer();
 
     private SpotifyOAuthService() {}
 
+    public record SetupBeginResult(@Nonnull String url, boolean copiedToClipboard) {}
+
     public static void shutdown() {
         SERVER.shutdown();
     }
 
-    public static boolean beginSetup(@Nonnull PlayerRef playerRef, @Nonnull UUIDComponent uuidComponent) {
+    @Nullable
+    public static SetupBeginResult beginSetup(@Nonnull PlayerRef playerRef, @Nonnull UUIDComponent uuidComponent) {
         if (!SERVER.ensureRunning()) {
             playerRef.sendMessage(Message.translation("spotify.spotify.oauth.serverFailed"));
-            return false;
+            return null;
         }
 
         SpotifyOAuthSession session = SERVER.createSession(uuidComponent.getUuid());
-        String url = SpotifyBrowserLauncher.setupUrl(session.getSessionId());
-        SpotifyBrowserLauncher.open(url);
-        playerRef.sendMessage(Message.translation("spotify.spotify.oauth.browserOpened").param("url", url));
-        return true;
+        String url = setupUrl(session.getSessionId());
+        boolean copied = SpotifySetupClipboard.tryCopy(url);
+        return new SetupBeginResult(url, copied);
+    }
+
+    @Nonnull
+    private static String setupUrl(@Nonnull String sessionId) {
+        return "http://127.0.0.1:" + SpotifyConstants.SETUP_PORT
+            + SpotifyConstants.SETUP_PATH + "?session=" + sessionId;
     }
 }

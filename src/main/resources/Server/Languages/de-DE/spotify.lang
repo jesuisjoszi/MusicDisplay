@@ -3,6 +3,7 @@ spotify.ui.panel.connected=Status: Verbunden
 spotify.ui.panel.notConnected=Status: Nicht verbunden
 spotify.ui.panel.hint=Konto verbinden, HUD anpassen oder /spotify controls fĂĽr Wiedergabe nutzen.
 spotify.ui.panel.setup=Spotify einrichten
+spotify.ui.panel.setupUrlHint=Einrichtungs-URL (Strg+A, Strg+C falls Zwischenablage fehlschlägt):
 spotify.ui.panel.hudSettings=HUD-Einstellungen
 spotify.ui.panel.hudOn=Overlay: sichtbar
 spotify.ui.panel.hudOff=Overlay: ausgeblendet
@@ -36,8 +37,8 @@ spotify.ui.panel.close=SchlieĂźen
 
 spotify.ui.setup.saved=Spotify verbunden! HUD aktiviert. Bei Steuerungsproblemen erneut verbinden.
 
-spotify.oauth.started=Browser-Einrichtung geĂ¶ffnet. SchlieĂźe die Schritte im Browser ab und kehre ins Spiel zurĂĽck.
-spotify.oauth.browserOpened=Einrichtungsseite: {url}
+spotify.oauth.copiedToClipboard=Einrichtungs-URL in die Zwischenablage kopiert. Mit Strg+V im Browser einfügen.
+spotify.oauth.copyFailed=Kopieren in die Zwischenablage fehlgeschlagen. URL unten mit Strg+A markieren, Strg+C kopieren und im Browser einfügen.
 spotify.oauth.serverFailed=Lokaler Einrichtungsserver auf Port 8888 konnte nicht gestartet werden.
 
 spotify.hud.idle=Nichts wird abgespielt

@@ -1,8 +1,9 @@
 spotify.ui.panel.title=Spotify
 spotify.ui.panel.connected=Status: Connected
 spotify.ui.panel.notConnected=Status: Not connected
-spotify.ui.panel.hint=Connect your account, customize the HUD, or use /spotify controls for playback.
+spotify.ui.panel.hint=Setup Spotify copies the connect URL to your clipboard. Customize the HUD or use /spotify controls for playback.
 spotify.ui.panel.setup=Setup Spotify
+spotify.ui.panel.setupUrlHint=Setup URL (Ctrl+A, Ctrl+C if clipboard copy failed):
 spotify.ui.panel.hudSettings=HUD Settings
 spotify.ui.panel.hudOn=Overlay: visible
 spotify.ui.panel.hudOff=Overlay: hidden
@@ -36,8 +37,8 @@ spotify.ui.panel.close=Close
 
 spotify.ui.setup.saved=Spotify connected! HUD enabled. Reconnect if playback controls fail.
 
-spotify.oauth.started=Browser setup opened. Complete the steps in your web browser, then return to the game.
-spotify.oauth.browserOpened=Setup page: {url}
+spotify.oauth.copiedToClipboard=Setup URL copied to clipboard. Paste it in your browser with Ctrl+V.
+spotify.oauth.copyFailed=Could not copy to clipboard. Select the URL below with Ctrl+A, copy with Ctrl+C, then paste in your browser.
 spotify.oauth.serverFailed=Could not start local setup server on port 8888. Close other apps using that port and try again.
 
 spotify.hud.idle=Nothing playing

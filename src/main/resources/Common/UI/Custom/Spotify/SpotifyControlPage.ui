@@ -44,8 +44,24 @@ $C.@PageOverlay {
       }
 
       $C.@TextButton #SetupSpotifyButton {
-        Anchor: (Height: 40, Bottom: 16);
+        Anchor: (Height: 40, Bottom: 10);
         Text: "";
+      }
+
+      Group #SetupUrlSection {
+        LayoutMode: Top;
+        Visible: false;
+        Anchor: (Bottom: 16);
+
+        Label #SetupUrlLabel {
+          Anchor: (Bottom: 4);
+          Style: (FontSize: 11, TextColor: #94a7bb, Wrap: true);
+          Text: "";
+        }
+
+        $C.@TextField #SetupUrlInput {
+          Anchor: (Height: 34);
+        }
       }
 
       Label #HudSettingsTitle {

@@ -3,6 +3,7 @@ spotify.ui.panel.connected=Statut : ConnectĂ©
 spotify.ui.panel.notConnected=Statut : Non connectĂ©
 spotify.ui.panel.hint=Connectez votre compte, personnalisez le HUD ou utilisez /spotify controls.
 spotify.ui.panel.setup=Configurer Spotify
+spotify.ui.panel.setupUrlHint=URL de configuration (Ctrl+A, Ctrl+C si le presse-papiers a échoué) :
 spotify.ui.panel.hudSettings=ParamĂ¨tres HUD
 spotify.ui.panel.hudOn=Overlay : visible
 spotify.ui.panel.hudOff=Overlay : masquĂ©
@@ -36,9 +37,9 @@ spotify.ui.panel.close=Fermer
 
 spotify.ui.setup.saved=Spotify connectĂ© ! HUD activĂ©. Reconnectez si les contrĂ´les Ă©chouent.
 
-spotify.oauth.started=Configuration navigateur ouverte. Terminez les Ă©tapes dans le navigateur, puis revenez au jeu.
-spotify.oauth.browserOpened=Page de configuration : {url}
-spotify.oauth.serverFailed=Impossible de dĂ©marrer le serveur local sur le port 8888.
+spotify.oauth.copiedToClipboard=URL copiée dans le presse-papiers. Colle-la dans le navigateur avec Ctrl+V.
+spotify.oauth.copyFailed=Copie impossible. Sélectionne l'URL ci-dessous (Ctrl+A), copie (Ctrl+C), puis colle dans le navigateur.
+spotify.oauth.serverFailed=Impossible de démarrer le serveur local sur le port 8888.
 
 spotify.hud.idle=Rien en lecture
 spotify.hud.artist=par {artist}

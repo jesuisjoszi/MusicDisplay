@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.jagod"
-version = "0.1.0"
+version = "0.1.2"
 val javaVersion = 25
 
 repositories {

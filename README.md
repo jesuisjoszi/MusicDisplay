@@ -33,13 +33,14 @@ A Hytale server mod that shows your live Spotify track on a customizable in-game
 
 ## First-time Spotify setup
 
-1. Run `/spotify` and click **Setup Spotify**.
-2. In the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard), add this Redirect URI:
+1. Run `/spotify` and click **Setup Spotify** — the setup URL is copied to your clipboard.
+2. Paste it in your browser with **Ctrl+V**.
+3. In the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard), add this Redirect URI:
    ```
    http://127.0.0.1:8888/callback
    ```
-3. Paste your **Client ID** and **Client Secret** into the browser setup page.
-4. Approve all Spotify permissions and return to the game.
+4. Paste your **Client ID** and **Client Secret** into the browser setup page.
+5. Approve all Spotify permissions and return to the game.
 
 ## Commands
 

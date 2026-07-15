@@ -1,0 +1,77 @@
+$C = "../Common.ui";
+$S = "../Spotify/SpotifyCommon.ui";
+
+$C.@PageOverlay {
+  LayoutMode: Middle;
+
+  $C.@DecoratedContainer {
+    Anchor: (Width: 480);
+
+    #Title {
+      Label #PanelTitle {
+        Style: (...$C.@TitleStyle, HorizontalAlignment: Center, TextColor: $S.@SpotifyAccent);
+        Padding: (Horizontal: 19);
+        Text: "";
+      }
+    }
+
+    #Content {
+      LayoutMode: Top;
+      Padding: (Full: 20);
+
+      Label #TrackLine {
+        Anchor: (Bottom: 4);
+        Style: $S.@SpotifyTrackStyle;
+        Text: "";
+      }
+
+      Label #ArtistLine {
+        Anchor: (Bottom: 6);
+        Style: $S.@SpotifyArtistStyle;
+        Text: "";
+      }
+
+      Label #StatusLine {
+        Anchor: (Bottom: 16);
+        Style: $S.@SpotifyBadgeStyle;
+        Text: "";
+      }
+
+      Group #ControlsRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 16);
+
+        $C.@TextButton #PrevButton {
+          FlexWeight: 1;
+          Anchor: (Right: 8, Height: 40);
+          Text: "";
+        }
+
+        $C.@TextButton #PlayPauseButton {
+          FlexWeight: 1;
+          Anchor: (Right: 8, Height: 40);
+          Text: "";
+        }
+
+        $C.@TextButton #NextButton {
+          FlexWeight: 1;
+          Anchor: (Height: 40);
+          Text: "";
+        }
+      }
+
+      Label #StatusLabel {
+        Anchor: (Bottom: 10);
+        Style: (...$C.@DefaultLabelStyle, Wrap: true, TextColor: #f0c674);
+        Text: "";
+      }
+
+      $C.@CancelTextButton #CloseButton {
+        Anchor: (Height: 36);
+        Text: "";
+      }
+    }
+  }
+}
+
+$C.@BackButton {}

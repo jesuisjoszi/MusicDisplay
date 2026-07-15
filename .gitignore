@@ -1,0 +1,25 @@
+# Gradle
+.gradle/
+build/
+out/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.classpath
+*.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local / secrets
+*.env
+.env.*
+
+# Hytale deploy artifacts (build locally, do not commit)
+*.jar
+!gradle/wrapper/gradle-wrapper.jar

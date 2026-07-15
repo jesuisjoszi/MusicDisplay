@@ -1,0 +1,23 @@
+$C = "../Common.ui";
+
+@SpotifyGreen = #1db954;
+@SpotifyGreenBright = #1ed760;
+@SpotifyPanelBg = #0d1117(0.88);
+@SpotifyTextPrimary = #e8eaed;
+@SpotifyTextMuted = #9aa0a6;
+@SpotifyAccent = #5ce1e6;
+
+@SpotifyTitleStyle = (...$C.@DefaultLabelStyle, FontSize: 11, TextColor: @SpotifyGreen, RenderBold: true, RenderUppercase: true);
+@SpotifyTrackStyle = (...$C.@DefaultLabelStyle, FontSize: 14, TextColor: @SpotifyTextPrimary, RenderBold: true, Wrap: true);
+@SpotifyArtistStyle = (...$C.@DefaultLabelStyle, FontSize: 11, TextColor: @SpotifyTextMuted, Wrap: true);
+@SpotifyTimeStyle = (...$C.@DefaultLabelStyle, FontSize: 9, TextColor: #6b7280);
+@SpotifyBadgeStyle = (...$C.@DefaultLabelStyle, FontSize: 10, TextColor: @SpotifyAccent, RenderBold: true, RenderUppercase: true);
+
+@SpotifyProgressBar = ProgressBar {
+  @Anchor = ();
+
+  Anchor: (...@Anchor, Height: 5);
+  Background: "../Textures/Spotify/ProgressBarTrack.png";
+  BarTexturePath: "../Textures/Spotify/ProgressBarFill.png";
+  Value: 0.0;
+};

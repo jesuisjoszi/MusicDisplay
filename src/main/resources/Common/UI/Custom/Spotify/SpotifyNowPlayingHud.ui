@@ -1,0 +1,45 @@
+$C = "../Common.ui";
+$S = "../Spotify/SpotifyCommon.ui";
+
+Group #SpotifyHudRoot {
+  LayoutMode: Top;
+  Anchor: (Bottom: 24, Left: 24, Width: 340);
+
+  Group #SpotifyHudPanel {
+    LayoutMode: Top;
+    Background: (TexturePath: "../Textures/Spotify/HudPanel.png", HorizontalBorder: 24, VerticalBorder: 20);
+    Padding: (Horizontal: 12, Vertical: 10);
+
+    Group #ContentInset {
+      LayoutMode: Top;
+      Padding: (Horizontal: 10);
+
+      Label #TrackLine {
+        Style: $S.@SpotifyTrackStyle;
+        Anchor: (Bottom: 2);
+        Text: "";
+      }
+
+      Label #ArtistLine {
+        Style: $S.@SpotifyArtistStyle;
+        Anchor: (Bottom: 8);
+        Text: "";
+      }
+
+      Group #ProgressSection {
+        LayoutMode: Top;
+
+        Label #TimeBadge {
+          Anchor: (Bottom: 4);
+          Style: (...$S.@SpotifyTimeStyle, HorizontalAlignment: End);
+          Text: "";
+        }
+
+        $S.@SpotifyProgressBar #TrackProgressBar {
+          @Anchor = (Left: 0, Right: 0);
+          Value: 0.0;
+        }
+      }
+    }
+  }
+}

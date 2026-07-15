@@ -1,0 +1,243 @@
+$C = "../Common.ui";
+$S = "../Spotify/SpotifyCommon.ui";
+
+$C.@PageOverlay {
+  LayoutMode: Middle;
+
+  $C.@DecoratedContainer {
+    Anchor: (Width: 540);
+
+    #Title {
+      Label #PanelTitle {
+        Style: (...$C.@TitleStyle, HorizontalAlignment: Center, TextColor: $S.@SpotifyAccent);
+        Padding: (Horizontal: 19);
+        Text: "";
+      }
+    }
+
+    #Content {
+      LayoutMode: Top;
+      Padding: (Full: 20);
+
+      Label #StatusLine {
+        Anchor: (Bottom: 8);
+        Style: (...$C.@DefaultLabelStyle, FontSize: 15, RenderBold: true, TextColor: $S.@SpotifyGreen);
+        Text: "";
+      }
+
+      Label #HudStateLine {
+        Anchor: (Bottom: 14);
+        Style: (...$C.@DefaultLabelStyle, FontSize: 13, TextColor: $S.@SpotifyTextMuted);
+        Text: "";
+      }
+
+      Label #HintLine {
+        Anchor: (Bottom: 16);
+        Style: (...$C.@DefaultLabelStyle, Wrap: true, TextColor: #6b7280);
+        Text: "";
+      }
+
+      Label #StatusLabel {
+        Anchor: (Bottom: 14);
+        Style: (...$C.@DefaultLabelStyle, Wrap: true, TextColor: #f0c674);
+        Text: "";
+      }
+
+      $C.@TextButton #SetupSpotifyButton {
+        Anchor: (Height: 40, Bottom: 16);
+        Text: "";
+      }
+
+      Label #HudSettingsTitle {
+        Anchor: (Bottom: 8);
+        Style: (...$C.@DefaultLabelStyle, FontSize: 14, RenderBold: true, TextColor: #e8eaed);
+        Text: "";
+      }
+
+      $C.@TextButton #ToggleHudButton {
+        Anchor: (Height: 36, Bottom: 10);
+        Text: "";
+      }
+
+      Label #PositionLabel {
+        Anchor: (Bottom: 6);
+        Style: (RenderBold: true, TextColor: #94a7bb, FontSize: 12);
+        Text: "";
+      }
+
+      Group #PositionButtons {
+        LayoutMode: Left;
+        Anchor: (Bottom: 10);
+
+        $C.@TextButton #PosBottomLeft {
+          FlexWeight: 1;
+          Anchor: (Right: 6, Height: 32);
+          Text: "";
+        }
+
+        $C.@TextButton #PosBottomRight {
+          FlexWeight: 1;
+          Anchor: (Right: 6, Height: 32);
+          Text: "";
+        }
+
+        $C.@TextButton #PosTopLeft {
+          FlexWeight: 1;
+          Anchor: (Right: 6, Height: 32);
+          Text: "";
+        }
+
+        $C.@TextButton #PosTopRight {
+          FlexWeight: 1;
+          Anchor: (Height: 32);
+          Text: "";
+        }
+      }
+
+      Label #SizeLabel {
+        Anchor: (Bottom: 6);
+        Style: (RenderBold: true, TextColor: #94a7bb, FontSize: 12);
+        Text: "";
+      }
+
+      Group #SizeButtons {
+        LayoutMode: Left;
+        Anchor: (Bottom: 10);
+
+        $C.@TextButton #SizeSmall {
+          FlexWeight: 1;
+          Anchor: (Right: 6, Height: 32);
+          Text: "";
+        }
+
+        $C.@TextButton #SizeMedium {
+          FlexWeight: 1;
+          Anchor: (Right: 6, Height: 32);
+          Text: "";
+        }
+
+        $C.@TextButton #SizeLarge {
+          FlexWeight: 1;
+          Anchor: (Height: 32);
+          Text: "";
+        }
+      }
+
+      $C.@TextButton #ToggleProgressButton {
+        Anchor: (Height: 32, Bottom: 10);
+        Text: "";
+      }
+
+      Group #OffsetRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 12);
+
+        Group {
+          LayoutMode: Top;
+          FlexWeight: 1;
+          Anchor: (Right: 8);
+
+          Label #OffsetXLabel {
+            Anchor: (Bottom: 4);
+            Style: (FontSize: 11, TextColor: #94a7bb);
+            Text: "";
+          }
+
+          $C.@TextField #OffsetXInput {
+            Anchor: (Height: 34);
+            PlaceholderText: "24";
+          }
+        }
+
+        Group {
+          LayoutMode: Top;
+          FlexWeight: 1;
+
+          Label #OffsetYLabel {
+            Anchor: (Bottom: 4);
+            Style: (FontSize: 11, TextColor: #94a7bb);
+            Text: "";
+          }
+
+          $C.@TextField #OffsetYInput {
+            Anchor: (Height: 34);
+            PlaceholderText: "24";
+          }
+        }
+      }
+
+      Label #TextColorsLabel {
+        Anchor: (Bottom: 6);
+        Style: (RenderBold: true, TextColor: #94a7bb, FontSize: 12);
+        Text: "";
+      }
+
+      Group #TextColorsRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 16);
+
+        Group {
+          LayoutMode: Top;
+          FlexWeight: 1;
+          Anchor: (Right: 8);
+
+          Label #TrackColorLabel {
+            Anchor: (Bottom: 4);
+            Style: (FontSize: 11, TextColor: #94a7bb);
+            Text: "";
+          }
+
+          $C.@TextField #TrackColorInput {
+            Anchor: (Height: 34);
+            PlaceholderText: "#e8eaed";
+          }
+        }
+
+        Group {
+          LayoutMode: Top;
+          FlexWeight: 1;
+          Anchor: (Right: 8);
+
+          Label #ArtistColorLabel {
+            Anchor: (Bottom: 4);
+            Style: (FontSize: 11, TextColor: #94a7bb);
+            Text: "";
+          }
+
+          $C.@TextField #ArtistColorInput {
+            Anchor: (Height: 34);
+            PlaceholderText: "#9aa0a6";
+          }
+        }
+
+        Group {
+          LayoutMode: Top;
+          FlexWeight: 1;
+
+          Label #TimeColorLabel {
+            Anchor: (Bottom: 4);
+            Style: (FontSize: 11, TextColor: #94a7bb);
+            Text: "";
+          }
+
+          $C.@TextField #TimeColorInput {
+            Anchor: (Height: 34);
+            PlaceholderText: "#6b7280";
+          }
+        }
+      }
+
+      $C.@TextButton #ApplyHudSettingsButton {
+        Anchor: (Height: 36, Bottom: 10);
+        Text: "";
+      }
+
+      $C.@CancelTextButton #CloseButton {
+        Anchor: (Height: 36);
+        Text: "";
+      }
+    }
+  }
+}
+
+$C.@BackButton {}

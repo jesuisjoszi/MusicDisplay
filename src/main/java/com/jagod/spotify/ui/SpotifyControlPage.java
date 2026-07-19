@@ -3,6 +3,7 @@ package com.jagod.spotify.ui;
 import com.jagod.spotify.data.SpotifyPlayerComponent;
 import com.jagod.spotify.oauth.SpotifyOAuthService;
 import com.jagod.spotify.service.SpotifyPollingService;
+import com.jagod.spotify.windows.WindowsMediaManager;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
@@ -46,6 +47,7 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
 
         commandBuilder.set("#PanelTitle.TextSpans", Message.translation("spotify.spotify.ui.panel.title"));
         commandBuilder.set("#HintLine.TextSpans", Message.translation("spotify.spotify.ui.panel.hint"));
+        commandBuilder.set("#SourceLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.source"));
         commandBuilder.set("#SetupSpotifyButton.TextSpans", Message.translation("spotify.spotify.ui.panel.setup"));
         commandBuilder.set("#SetupUrlLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.setupUrlHint"));
         commandBuilder.set("#SetupUrlSection.Visible", false);
@@ -69,6 +71,7 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         commandBuilder.set("#StatusLabel.TextSpans", Message.raw(""));
 
         applyConnectionState(commandBuilder, state);
+        applySourceState(commandBuilder, state);
         applyHudState(commandBuilder, state);
         applyCustomizationState(commandBuilder, state);
 
@@ -77,6 +80,8 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         }
 
         bind(eventBuilder, "Setup", "#SetupSpotifyButton");
+        bind(eventBuilder, "SourceSpotify", "#SourceSpotify");
+        bind(eventBuilder, "SourceWindows", "#SourceWindows");
         bind(eventBuilder, "ToggleHud", "#ToggleHudButton");
         bind(eventBuilder, "PosBottomLeft", "#PosBottomLeft");
         bind(eventBuilder, "PosBottomRight", "#PosBottomRight");
@@ -98,6 +103,8 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         switch (data.action) {
             case "Close" -> close();
             case "Setup" -> startBrowserSetup(ref, store);
+            case "SourceSpotify" -> setMusicSource(ref, store, MusicSource.SPOTIFY);
+            case "SourceWindows" -> setMusicSource(ref, store, MusicSource.WINDOWS);
             case "ToggleHud" -> toggleHud(ref, store);
             case "PosBottomLeft" -> setPosition(ref, store, SpotifyHudPosition.BOTTOM_LEFT);
             case "PosBottomRight" -> setPosition(ref, store, SpotifyHudPosition.BOTTOM_RIGHT);
@@ -118,6 +125,33 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
             );
             default -> {}
         }
+    }
+
+    private void setMusicSource(
+        @Nonnull Ref<EntityStore> ref,
+        @Nonnull Store<EntityStore> store,
+        @Nonnull MusicSource source
+    ) {
+        SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
+        if (state == null) {
+            return;
+        }
+        state.setMusicSource(source);
+        if (source.isWindows()) {
+            state.setHudEnabled(true);
+            if (!WindowsMediaManager.isOsWindows()) {
+                pushStatus(Message.translation("spotify.spotify.command.windowsUnavailable"));
+            } else if (!WindowsMediaManager.get().isReady()) {
+                WindowsMediaManager.get().start();
+                pushStatus(Message.translation("spotify.spotify.ui.panel.windowsStarting"));
+            } else {
+                pushStatus(Message.translation("spotify.spotify.ui.panel.windowsSelected"));
+            }
+        } else {
+            pushStatus(Message.translation("spotify.spotify.ui.panel.spotifySelected"));
+        }
+        refreshHud(ref, store);
+        pushPanelState(ref, store);
     }
 
     private void startBrowserSetup(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
@@ -242,6 +276,7 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
         UICommandBuilder builder = new UICommandBuilder();
         applyConnectionState(builder, state);
+        applySourceState(builder, state);
         applyHudState(builder, state);
         applyCustomizationState(builder, state);
         if (state != null) {
@@ -265,11 +300,38 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
     }
 
     private static void applyConnectionState(@Nonnull UICommandBuilder builder, @Nullable SpotifyPlayerComponent state) {
-        if (state != null && state.hasCredentials()) {
+        if (state != null && state.getMusicSource().isWindows()) {
+            if (WindowsMediaManager.get().isReady()) {
+                builder.set("#StatusLine.TextSpans", Message.translation("spotify.spotify.ui.panel.windowsReady"));
+            } else {
+                builder.set("#StatusLine.TextSpans", Message.translation("spotify.spotify.ui.panel.windowsNotReady"));
+            }
+        } else if (state != null && state.hasCredentials()) {
             builder.set("#StatusLine.TextSpans", Message.translation("spotify.spotify.ui.panel.connected"));
         } else {
             builder.set("#StatusLine.TextSpans", Message.translation("spotify.spotify.ui.panel.notConnected"));
         }
+    }
+
+    private static void applySourceState(@Nonnull UICommandBuilder builder, @Nullable SpotifyPlayerComponent state) {
+        MusicSource source = state != null ? state.getMusicSource() : MusicSource.SPOTIFY;
+        builder.set(
+            "#SourceSpotify.TextSpans",
+            Message.translation(
+                source == MusicSource.SPOTIFY
+                    ? "spotify.spotify.ui.panel.sourceSpotifySelected"
+                    : "spotify.spotify.ui.panel.sourceSpotify"
+            )
+        );
+        builder.set(
+            "#SourceWindows.TextSpans",
+            Message.translation(
+                source == MusicSource.WINDOWS
+                    ? "spotify.spotify.ui.panel.sourceWindowsSelected"
+                    : "spotify.spotify.ui.panel.sourceWindows"
+            )
+        );
+        builder.set("#SetupSpotifyButton.Visible", source == MusicSource.SPOTIFY);
     }
 
     private static void applyHudState(@Nonnull UICommandBuilder builder, @Nullable SpotifyPlayerComponent state) {

@@ -58,6 +58,25 @@ public final class SpotifyNowPlayingInfo {
     }
 
     @Nonnull
+    public static SpotifyNowPlayingInfo of(
+        @Nonnull Status status,
+        @Nonnull String trackName,
+        @Nonnull String artistName,
+        long progressMs,
+        long durationMs
+    ) {
+        return new SpotifyNowPlayingInfo(
+            status,
+            trackName,
+            artistName,
+            null,
+            progressMs,
+            durationMs,
+            System.currentTimeMillis()
+        );
+    }
+
+    @Nonnull
     public Status getStatus() {
         return status;
     }

@@ -6,6 +6,7 @@ import com.jagod.spotify.oauth.SpotifyOAuthService;
 import com.jagod.spotify.service.SpotifyControlsRegistry;
 import com.jagod.spotify.service.SpotifyPollingService;
 import com.jagod.spotify.ui.SpotifyHudSupport;
+import com.jagod.spotify.windows.WindowsMediaManager;
 import com.hypixel.hytale.assetstore.AssetPack;
 import com.hypixel.hytale.common.plugin.PluginIdentifier;
 import com.hypixel.hytale.component.Ref;
@@ -66,7 +67,7 @@ public final class SpotifyPlugin extends JavaPlugin {
                 Store<EntityStore> store = ref.getStore();
                 SpotifyCommand.ensureComponent(store, ref);
                 SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
-                if (state != null && state.isHudEnabled() && state.hasCredentials()) {
+                if (state != null && state.canShowHud()) {
                     SpotifyPollingService.refreshPlayerNow(ref, store);
                 }
             });
@@ -88,11 +89,13 @@ public final class SpotifyPlugin extends JavaPlugin {
         });
 
         SpotifyPollingService.start();
+        WindowsMediaManager.get().start();
         LOGGER.atInfo().log("MusicDisplay started — use /spotify to open the control panel");
     }
 
     @Override
     protected void shutdown() {
+        WindowsMediaManager.get().stop();
         SpotifyOAuthService.shutdown();
     }
 

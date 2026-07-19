@@ -163,6 +163,7 @@ public final class SpotifyControlsPage extends InteractiveCustomUIPage<SpotifyCo
             case FORBIDDEN -> Message.translation("spotify.spotify.command.forbidden");
             case MISSING_SCOPE -> Message.translation("spotify.spotify.command.missingScope");
             case PREMIUM_REQUIRED -> Message.translation("spotify.spotify.command.premiumRequired");
+            case WINDOWS_UNAVAILABLE -> Message.translation("spotify.spotify.command.windowsUnavailable");
             case API_ERROR -> Message.translation("spotify.spotify.command.apiError");
             case OK -> Message.raw("");
         };

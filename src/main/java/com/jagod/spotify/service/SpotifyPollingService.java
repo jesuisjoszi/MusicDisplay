@@ -1,5 +1,6 @@
 package com.jagod.spotify.service;
 
+import com.jagod.spotify.windows.WindowsMediaManager;
 import com.jagod.spotify.api.SpotifyNowPlayingInfo;
 import com.jagod.spotify.data.SpotifyPlayerComponent;
 import com.jagod.spotify.ui.SpotifyHudSupport;
@@ -105,7 +106,7 @@ public final class SpotifyPollingService {
         if (state == null) {
             return;
         }
-        if (!state.isHudEnabled() || !state.hasCredentials()) {
+        if (!state.canShowHud()) {
             LAST_INFO.remove(playerRef.getUuid());
             if (SpotifyHudSupport.isHudActive(player)) {
                 SpotifyHudSupport.removeHud(player, playerRef);
@@ -115,13 +116,21 @@ public final class SpotifyPollingService {
 
         SpotifyNowPlayingInfo info;
         if (fetchApi) {
-            info = SpotifyNowPlayingInfo.fetch(state);
+            if (state.getMusicSource().isWindows()) {
+                info = WindowsMediaManager.get().getStatus();
+            } else {
+                info = SpotifyNowPlayingInfo.fetch(state);
+            }
             LAST_INFO.put(playerRef.getUuid(), info);
             state.setNowPlaying(info.getTrackName(), info.getArtistName(), info.getStatus().name());
         } else {
             info = LAST_INFO.get(playerRef.getUuid());
             if (info == null) {
                 return;
+            }
+            if (state.getMusicSource().isWindows()) {
+                info = WindowsMediaManager.get().getStatus();
+                LAST_INFO.put(playerRef.getUuid(), info);
             }
         }
 

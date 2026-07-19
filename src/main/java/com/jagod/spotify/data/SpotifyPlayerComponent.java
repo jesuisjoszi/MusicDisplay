@@ -1,5 +1,6 @@
 package com.jagod.spotify.data;
 
+import com.jagod.spotify.ui.MusicSource;
 import com.jagod.spotify.ui.SpotifyHudLayout;
 import com.jagod.spotify.ui.SpotifyHudPosition;
 import com.jagod.spotify.ui.SpotifyHudScale;
@@ -54,6 +55,8 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
         .add()
         .append(new KeyedCodec<>("HudTimeColor", Codec.STRING), (c, v) -> c.hudTimeColor = blankToNull(v), c -> c.hudTimeColor)
         .add()
+        .append(new KeyedCodec<>("MusicSource", Codec.STRING), (c, v) -> c.musicSource = MusicSource.fromString(v), c -> c.musicSource.name())
+        .add()
         .append(new KeyedCodec<>("LastTrack", Codec.STRING), (c, v) -> c.lastTrack = blankToNull(v), c -> c.lastTrack)
         .add()
         .append(new KeyedCodec<>("LastArtist", Codec.STRING), (c, v) -> c.lastArtist = blankToNull(v), c -> c.lastArtist)
@@ -90,6 +93,8 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
     private String hudArtistColor;
     @Nullable
     private String hudTimeColor;
+    @Nonnull
+    private MusicSource musicSource = MusicSource.SPOTIFY;
     @Nullable
     private String lastTrack;
     @Nullable
@@ -181,6 +186,25 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
     @Nullable
     public String getHudTimeColor() {
         return hudTimeColor;
+    }
+
+    @Nonnull
+    public MusicSource getMusicSource() {
+        return musicSource;
+    }
+
+    public void setMusicSource(@Nonnull MusicSource musicSource) {
+        this.musicSource = musicSource;
+    }
+
+    public boolean canShowHud() {
+        if (!hudEnabled) {
+            return false;
+        }
+        if (musicSource.isWindows()) {
+            return true;
+        }
+        return hasCredentials();
     }
 
     @Nullable
@@ -286,6 +310,7 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
         copy.hudTrackColor = hudTrackColor;
         copy.hudArtistColor = hudArtistColor;
         copy.hudTimeColor = hudTimeColor;
+        copy.musicSource = musicSource;
         copy.lastTrack = lastTrack;
         copy.lastArtist = lastArtist;
         copy.lastStatus = lastStatus;

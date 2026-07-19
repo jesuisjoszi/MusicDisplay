@@ -2,6 +2,7 @@ package com.jagod.spotify.service;
 
 import com.jagod.spotify.api.SpotifyProfile;
 import com.jagod.spotify.data.SpotifyPlayerComponent;
+import com.jagod.spotify.windows.WindowsMediaManager;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
@@ -26,6 +27,7 @@ public final class SpotifyPlaybackSupport {
         FORBIDDEN,
         MISSING_SCOPE,
         PREMIUM_REQUIRED,
+        WINDOWS_UNAVAILABLE,
         API_ERROR
     }
 
@@ -33,6 +35,9 @@ public final class SpotifyPlaybackSupport {
 
     @Nonnull
     public static Result run(@Nonnull SpotifyPlayerComponent state, @Nonnull Action action) {
+        if (state.getMusicSource().isWindows()) {
+            return runWindows(action);
+        }
         if (!state.hasCredentials()) {
             return Result.NOT_CONNECTED;
         }
@@ -54,6 +59,20 @@ public final class SpotifyPlaybackSupport {
         return mapCode(code, state);
     }
 
+    @Nonnull
+    private static Result runWindows(@Nonnull Action action) {
+        WindowsMediaManager media = WindowsMediaManager.get();
+        if (!WindowsMediaManager.isOsWindows() || !media.isReady()) {
+            return Result.WINDOWS_UNAVAILABLE;
+        }
+        switch (action) {
+            case NEXT -> media.next();
+            case PREVIOUS -> media.previous();
+            case PLAY, PAUSE, TOGGLE -> media.playPause();
+        }
+        return Result.OK;
+    }
+
     public static void apply(
         @Nonnull PlayerRef playerRef,
         @Nonnull Ref<EntityStore> ref,
@@ -62,14 +81,13 @@ public final class SpotifyPlaybackSupport {
         @Nonnull Result result
     ) {
         switch (result) {
-            case OK -> {
-                SpotifyPollingService.refreshPlayerNow(ref, store);
-            }
+            case OK -> SpotifyPollingService.refreshPlayerNow(ref, store);
             case NOT_CONNECTED -> playerRef.sendMessage(Message.translation("spotify.spotify.command.noAuth"));
             case NO_DEVICE -> playerRef.sendMessage(Message.translation("spotify.spotify.command.noDevice"));
             case FORBIDDEN -> playerRef.sendMessage(Message.translation("spotify.spotify.command.forbidden"));
             case MISSING_SCOPE -> playerRef.sendMessage(Message.translation("spotify.spotify.command.missingScope"));
             case PREMIUM_REQUIRED -> playerRef.sendMessage(Message.translation("spotify.spotify.command.premiumRequired"));
+            case WINDOWS_UNAVAILABLE -> playerRef.sendMessage(Message.translation("spotify.spotify.command.windowsUnavailable"));
             case API_ERROR -> playerRef.sendMessage(Message.translation("spotify.spotify.command.apiError"));
         }
     }

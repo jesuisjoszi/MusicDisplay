@@ -18,12 +18,13 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import javax.annotation.Nonnull;
 
 /**
- * Root {@code /spotify} command. Bare {@code /spotify} opens the settings panel; playback and HUD
- * actions are registered as subcommands (same pattern as Aetherhaven {@code /aetherhaven town invite}).
+ * Root {@code /musicdisplay} (alias {@code /msd}) command. Bare command opens settings;
+ * playback and HUD actions are subcommands.
  */
 public final class SpotifyCommand extends SpotifyAccessiblePlayerCommand {
     public SpotifyCommand() {
         super(SpotifyConstants.COMMAND_ROOT, "spotify.spotify.command.desc");
+        this.addAliases(SpotifyConstants.COMMAND_ALIAS_SHORT);
 
         this.addSubCommand(new ControlsSubCommand());
         this.addSubCommand(new PlaybackSubCommand("next", SpotifyPlaybackSupport.Action.NEXT));

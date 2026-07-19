@@ -34,6 +34,46 @@ public final class SpotifyPlaybackService {
         return authorizedRequest(state, "PUT", "/play");
     }
 
+    public static int setVolume(@Nonnull SpotifyPlayerComponent state, int volumePercent) {
+        int clamped = Math.max(0, Math.min(100, volumePercent));
+        String token = SpotifyAuth.ensureAccessToken(state);
+        if (token == null) {
+            return -1;
+        }
+        Map<String, String> headers = Map.of("Authorization", "Bearer " + token);
+        String deviceId = resolveActiveDeviceId(token);
+        String url = PLAYER_API + "/volume?volume_percent=" + clamped;
+        if (deviceId != null && !deviceId.isBlank()) {
+            url += "&device_id=" + URLEncoder.encode(deviceId, StandardCharsets.UTF_8);
+        }
+        return SpotifyHttpClient.putEmpty(url, headers);
+    }
+
+    public static int getVolumePercent(@Nonnull SpotifyPlayerComponent state) {
+        String token = SpotifyAuth.ensureAccessToken(state);
+        if (token == null) {
+            return -1;
+        }
+        String body = SpotifyHttpClient.getString(PLAYER_API, Map.of("Authorization", "Bearer " + token));
+        if (body == null || body.isBlank()) {
+            return -1;
+        }
+        try {
+            JsonObject root = JsonParser.parseString(body).getAsJsonObject();
+            if (!root.has("device") || !root.get("device").isJsonObject()) {
+                return -1;
+            }
+            JsonObject device = root.getAsJsonObject("device");
+            if (!device.has("volume_percent") || device.get("volume_percent").isJsonNull()) {
+                return -1;
+            }
+            return Math.max(0, Math.min(100, device.get("volume_percent").getAsInt()));
+        } catch (Exception e) {
+            LOGGER.atFine().withCause(e).log("Failed to parse Spotify volume");
+            return -1;
+        }
+    }
+
     private static int authorizedRequest(@Nonnull SpotifyPlayerComponent state, @Nonnull String method, @Nonnull String path) {
         String token = SpotifyAuth.ensureAccessToken(state);
         if (token == null) {

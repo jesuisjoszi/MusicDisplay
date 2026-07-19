@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.jagod.spotify.data.SpotifyPlayerComponent;
+import java.nio.file.Path;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -25,6 +26,10 @@ public final class SpotifyNowPlayingInfo {
     private final String artistName;
     @Nullable
     private final String errorMessage;
+    @Nullable
+    private final String albumArtUrl;
+    @Nullable
+    private final Path localArtPath;
     private final long progressMs;
     private final long durationMs;
     private final long fetchedAtMs;
@@ -34,6 +39,8 @@ public final class SpotifyNowPlayingInfo {
         @Nullable String trackName,
         @Nullable String artistName,
         @Nullable String errorMessage,
+        @Nullable String albumArtUrl,
+        @Nullable Path localArtPath,
         long progressMs,
         long durationMs,
         long fetchedAtMs
@@ -42,6 +49,8 @@ public final class SpotifyNowPlayingInfo {
         this.trackName = trackName;
         this.artistName = artistName;
         this.errorMessage = errorMessage;
+        this.albumArtUrl = albumArtUrl;
+        this.localArtPath = localArtPath;
         this.progressMs = progressMs;
         this.durationMs = durationMs;
         this.fetchedAtMs = fetchedAtMs;
@@ -49,12 +58,12 @@ public final class SpotifyNowPlayingInfo {
 
     @Nonnull
     public static SpotifyNowPlayingInfo idle() {
-        return new SpotifyNowPlayingInfo(Status.IDLE, null, null, null, 0L, 0L, System.currentTimeMillis());
+        return new SpotifyNowPlayingInfo(Status.IDLE, null, null, null, null, null, 0L, 0L, System.currentTimeMillis());
     }
 
     @Nonnull
     public static SpotifyNowPlayingInfo error(@Nonnull String message) {
-        return new SpotifyNowPlayingInfo(Status.ERROR, null, null, message, 0L, 0L, System.currentTimeMillis());
+        return new SpotifyNowPlayingInfo(Status.ERROR, null, null, message, null, null, 0L, 0L, System.currentTimeMillis());
     }
 
     @Nonnull
@@ -65,11 +74,26 @@ public final class SpotifyNowPlayingInfo {
         long progressMs,
         long durationMs
     ) {
+        return of(status, trackName, artistName, null, null, progressMs, durationMs);
+    }
+
+    @Nonnull
+    public static SpotifyNowPlayingInfo of(
+        @Nonnull Status status,
+        @Nonnull String trackName,
+        @Nonnull String artistName,
+        @Nullable String albumArtUrl,
+        @Nullable Path localArtPath,
+        long progressMs,
+        long durationMs
+    ) {
         return new SpotifyNowPlayingInfo(
             status,
             trackName,
             artistName,
             null,
+            albumArtUrl,
+            localArtPath,
             progressMs,
             durationMs,
             System.currentTimeMillis()
@@ -94,6 +118,16 @@ public final class SpotifyNowPlayingInfo {
     @Nullable
     public String getErrorMessage() {
         return errorMessage;
+    }
+
+    @Nullable
+    public String getAlbumArtUrl() {
+        return albumArtUrl;
+    }
+
+    @Nullable
+    public Path getLocalArtPath() {
+        return localArtPath;
     }
 
     public long getDurationMs() {
@@ -197,10 +231,13 @@ public final class SpotifyNowPlayingInfo {
             String track = item.has("name") ? item.get("name").getAsString() : "Unknown track";
             String artist = parseArtists(item);
             long durationMs = item.has("duration_ms") ? item.get("duration_ms").getAsLong() : 0L;
+            String artUrl = parseAlbumArtUrl(item);
             return new SpotifyNowPlayingInfo(
                 playing ? Status.PLAYING : Status.PAUSED,
                 track,
                 artist,
+                null,
+                artUrl,
                 null,
                 progressMs,
                 durationMs,
@@ -209,6 +246,43 @@ public final class SpotifyNowPlayingInfo {
         } catch (Exception e) {
             return error("Invalid Spotify response");
         }
+    }
+
+    @Nullable
+    private static String parseAlbumArtUrl(@Nonnull JsonObject item) {
+        JsonArray images = null;
+        if (item.has("album") && item.get("album").isJsonObject()) {
+            JsonObject album = item.getAsJsonObject("album");
+            if (album.has("images") && album.get("images").isJsonArray()) {
+                images = album.getAsJsonArray("images");
+            }
+        }
+        if (images == null && item.has("images") && item.get("images").isJsonArray()) {
+            images = item.getAsJsonArray("images");
+        }
+        if (images == null || images.isEmpty()) {
+            return null;
+        }
+        String best = null;
+        int bestSize = Integer.MAX_VALUE;
+        for (JsonElement element : images) {
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            JsonObject image = element.getAsJsonObject();
+            if (!image.has("url") || image.get("url").isJsonNull()) {
+                continue;
+            }
+            String url = image.get("url").getAsString();
+            int height = image.has("height") && !image.get("height").isJsonNull() ? image.get("height").getAsInt() : 640;
+            if (height >= 64 && height < bestSize) {
+                bestSize = height;
+                best = url;
+            } else if (best == null) {
+                best = url;
+            }
+        }
+        return best;
     }
 
     @Nonnull

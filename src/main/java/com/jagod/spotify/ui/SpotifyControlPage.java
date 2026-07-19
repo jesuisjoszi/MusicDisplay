@@ -23,7 +23,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-/** In-game control panel with browser-based Spotify OAuth setup and HUD settings. */
+/** Settings panel: source, connect, HUD options. Playback lives in {@link SpotifyControlsPage}. */
 public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyControlPage.PageData> {
     private boolean templateAppended;
 
@@ -46,43 +46,32 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
 
         commandBuilder.set("#PanelTitle.TextSpans", Message.translation("spotify.spotify.ui.panel.title"));
-        commandBuilder.set("#HintLine.TextSpans", Message.translation("spotify.spotify.ui.panel.hint"));
         commandBuilder.set("#SourceLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.source"));
         commandBuilder.set("#SetupSpotifyButton.TextSpans", Message.translation("spotify.spotify.ui.panel.setup"));
         commandBuilder.set("#SetupUrlLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.setupUrlHint"));
         commandBuilder.set("#SetupUrlSection.Visible", false);
         commandBuilder.set("#SetupUrlInput.Value", "");
-        commandBuilder.set("#HudSettingsTitle.TextSpans", Message.translation("spotify.spotify.ui.panel.hudSettings"));
+        commandBuilder.set("#DisplayLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.display"));
+        commandBuilder.set("#HudCheckLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.hudCheck"));
+        commandBuilder.set("#ProgressCheckLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.progressCheck"));
+        commandBuilder.set("#TrackNotifyCheckLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.trackNotifyCheck"));
         commandBuilder.set("#PositionLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.position"));
         commandBuilder.set("#SizeLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.size"));
-        commandBuilder.set("#ToggleProgressButton.TextSpans", Message.translation("spotify.spotify.ui.panel.toggleProgress"));
-        commandBuilder.set("#OffsetXLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.offsetX"));
-        commandBuilder.set("#OffsetYLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.offsetY"));
-        commandBuilder.set("#TextColorsLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.textColors"));
-        commandBuilder.set("#TrackColorLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.trackColor"));
-        commandBuilder.set("#ArtistColorLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.artistColor"));
-        commandBuilder.set("#TimeColorLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.timeColor"));
-        commandBuilder.set("#ApplyHudSettingsButton.TextSpans", Message.translation("spotify.spotify.ui.panel.applyHud"));
-        commandBuilder.set("#CloseButton.TextSpans", Message.translation("spotify.spotify.ui.panel.close"));
         commandBuilder.set("#PosBottomLeft.TextSpans", Message.translation("spotify.spotify.ui.panel.posBottomLeft"));
         commandBuilder.set("#PosBottomRight.TextSpans", Message.translation("spotify.spotify.ui.panel.posBottomRight"));
         commandBuilder.set("#PosTopLeft.TextSpans", Message.translation("spotify.spotify.ui.panel.posTopLeft"));
         commandBuilder.set("#PosTopRight.TextSpans", Message.translation("spotify.spotify.ui.panel.posTopRight"));
-        commandBuilder.set("#StatusLabel.TextSpans", Message.raw(""));
+        commandBuilder.set("#SizeSmall.TextSpans", Message.translation("spotify.spotify.ui.panel.sizeSmall"));
+        commandBuilder.set("#SizeMedium.TextSpans", Message.translation("spotify.spotify.ui.panel.sizeMedium"));
+        commandBuilder.set("#SizeLarge.TextSpans", Message.translation("spotify.spotify.ui.panel.sizeLarge"));
+        commandBuilder.set("#OpenControlsButton.TextSpans", Message.translation("spotify.spotify.ui.panel.openControls"));
+        commandBuilder.set("#CloseButton.TextSpans", Message.translation("spotify.spotify.ui.panel.close"));
 
-        applyConnectionState(commandBuilder, state);
-        applySourceState(commandBuilder, state);
-        applyHudState(commandBuilder, state);
-        applyCustomizationState(commandBuilder, state);
-
-        if (state != null) {
-            applyHudInputs(commandBuilder, state);
-        }
+        applyState(commandBuilder, state);
 
         bind(eventBuilder, "Setup", "#SetupSpotifyButton");
         bind(eventBuilder, "SourceSpotify", "#SourceSpotify");
         bind(eventBuilder, "SourceWindows", "#SourceWindows");
-        bind(eventBuilder, "ToggleHud", "#ToggleHudButton");
         bind(eventBuilder, "PosBottomLeft", "#PosBottomLeft");
         bind(eventBuilder, "PosBottomRight", "#PosBottomRight");
         bind(eventBuilder, "PosTopLeft", "#PosTopLeft");
@@ -90,9 +79,11 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         bind(eventBuilder, "SizeSmall", "#SizeSmall");
         bind(eventBuilder, "SizeMedium", "#SizeMedium");
         bind(eventBuilder, "SizeLarge", "#SizeLarge");
-        bind(eventBuilder, "ToggleProgress", "#ToggleProgressButton");
-        bindApplyHud(eventBuilder);
+        bind(eventBuilder, "OpenControls", "#OpenControlsButton");
         bind(eventBuilder, "Close", "#CloseButton");
+        bindCheck(eventBuilder, "ToggleHud", "#HudCheck");
+        bindCheck(eventBuilder, "ToggleProgress", "#ProgressCheck");
+        bindCheck(eventBuilder, "ToggleTrackNotify", "#TrackNotifyCheck");
     }
 
     @Override
@@ -105,7 +96,7 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
             case "Setup" -> startBrowserSetup(ref, store);
             case "SourceSpotify" -> setMusicSource(ref, store, MusicSource.SPOTIFY);
             case "SourceWindows" -> setMusicSource(ref, store, MusicSource.WINDOWS);
-            case "ToggleHud" -> toggleHud(ref, store);
+            case "ToggleHud" -> setHudEnabled(ref, store, data.checked);
             case "PosBottomLeft" -> setPosition(ref, store, SpotifyHudPosition.BOTTOM_LEFT);
             case "PosBottomRight" -> setPosition(ref, store, SpotifyHudPosition.BOTTOM_RIGHT);
             case "PosTopLeft" -> setPosition(ref, store, SpotifyHudPosition.TOP_LEFT);
@@ -113,18 +104,22 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
             case "SizeSmall" -> setScale(ref, store, SpotifyHudScale.SMALL);
             case "SizeMedium" -> setScale(ref, store, SpotifyHudScale.MEDIUM);
             case "SizeLarge" -> setScale(ref, store, SpotifyHudScale.LARGE);
-            case "ToggleProgress" -> toggleProgress(ref, store);
-            case "ApplyHud" -> applyHudSettings(
-                ref,
-                store,
-                data.offsetX,
-                data.offsetY,
-                data.trackColor,
-                data.artistColor,
-                data.timeColor
-            );
+            case "ToggleProgress" -> setProgressVisible(ref, store, data.checked);
+            case "ToggleTrackNotify" -> setTrackNotify(ref, store, data.checked);
+            case "OpenControls" -> openControls(ref, store);
             default -> {}
         }
+    }
+
+    private void openControls(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
+        Player player = store.getComponent(ref, Player.getComponentType());
+        PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
+        if (player == null || playerRef == null) {
+            return;
+        }
+        close();
+        player.getPageManager().openCustomPage(ref, store, new SpotifyControlsPage(playerRef));
+        SpotifyPollingService.refreshPlayerNow(ref, store);
     }
 
     private void setMusicSource(
@@ -139,19 +134,12 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         state.setMusicSource(source);
         if (source.isWindows()) {
             state.setHudEnabled(true);
-            if (!WindowsMediaManager.isOsWindows()) {
-                pushStatus(Message.translation("spotify.spotify.command.windowsUnavailable"));
-            } else if (!WindowsMediaManager.get().isReady()) {
+            if (WindowsMediaManager.isOsWindows() && !WindowsMediaManager.get().isReady()) {
                 WindowsMediaManager.get().start();
-                pushStatus(Message.translation("spotify.spotify.ui.panel.windowsStarting"));
-            } else {
-                pushStatus(Message.translation("spotify.spotify.ui.panel.windowsSelected"));
             }
-        } else {
-            pushStatus(Message.translation("spotify.spotify.ui.panel.spotifySelected"));
         }
         refreshHud(ref, store);
-        pushPanelState(ref, store);
+        pushState(ref, store);
     }
 
     private void startBrowserSetup(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
@@ -161,146 +149,111 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
             return;
         }
         SpotifyOAuthService.SetupBeginResult result = SpotifyOAuthService.beginSetup(playerRef, uuidComponent);
-        if (result != null) {
-            pushSetupUrl(result.url());
-            pushStatus(
-                Message.translation(
-                    result.copiedToClipboard()
-                        ? "spotify.spotify.oauth.copiedToClipboard"
-                        : "spotify.spotify.oauth.copyFailed"
-                )
-            );
+        if (result == null) {
+            return;
         }
-    }
-
-    private void pushSetupUrl(@Nonnull String url) {
         UICommandBuilder builder = new UICommandBuilder();
         builder.set("#SetupUrlSection.Visible", true);
-        builder.set("#SetupUrlInput.Value", url);
+        builder.set("#SetupUrlInput.Value", result.url());
+        builder.set(
+            "#StatusLine.TextSpans",
+            Message.translation(
+                result.copiedToClipboard()
+                    ? "spotify.spotify.oauth.copiedToClipboard"
+                    : "spotify.spotify.oauth.copyFailed"
+            )
+        );
         sendUpdate(builder, null, false);
     }
 
-    private void toggleHud(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
+    private void setHudEnabled(
+        @Nonnull Ref<EntityStore> ref,
+        @Nonnull Store<EntityStore> store,
+        @Nullable Boolean checked
+    ) {
         SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
         Player player = store.getComponent(ref, Player.getComponentType());
         PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
-        if (state == null || player == null || playerRef == null) {
+        if (state == null || player == null || playerRef == null || checked == null) {
             return;
         }
-
-        boolean enabled = !state.isHudEnabled();
-        state.setHudEnabled(enabled);
-        if (enabled) {
-            playerRef.sendMessage(Message.translation("spotify.spotify.command.enabled"));
-            SpotifyPollingService.refreshPlayerNow(ref, store);
-        } else {
+        state.setHudEnabled(checked);
+        if (!checked) {
             SpotifyHudSupport.removeHud(player, playerRef);
-            playerRef.sendMessage(Message.translation("spotify.spotify.command.disabled"));
         }
-        pushPanelState(ref, store);
+        pushState(ref, store);
     }
 
-    private void setPosition(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, @Nonnull SpotifyHudPosition position) {
+    private void setPosition(
+        @Nonnull Ref<EntityStore> ref,
+        @Nonnull Store<EntityStore> store,
+        @Nonnull SpotifyHudPosition position
+    ) {
         SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
         if (state == null) {
             return;
         }
         state.setHudPosition(position);
         refreshHud(ref, store);
-        pushPanelState(ref, store);
+        pushState(ref, store);
     }
 
-    private void setScale(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, @Nonnull SpotifyHudScale scale) {
+    private void setScale(
+        @Nonnull Ref<EntityStore> ref,
+        @Nonnull Store<EntityStore> store,
+        @Nonnull SpotifyHudScale scale
+    ) {
         SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
         if (state == null) {
             return;
         }
         state.setHudScale(scale);
         refreshHud(ref, store);
-        pushPanelState(ref, store);
+        pushState(ref, store);
     }
 
-    private void toggleProgress(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
+    private void setProgressVisible(
+        @Nonnull Ref<EntityStore> ref,
+        @Nonnull Store<EntityStore> store,
+        @Nullable Boolean checked
+    ) {
         SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
-        if (state == null) {
+        if (state == null || checked == null) {
             return;
         }
-        state.setHudProgressVisible(!state.isHudProgressVisible());
+        state.setHudProgressVisible(checked);
         refreshHud(ref, store);
-        pushPanelState(ref, store);
+        pushState(ref, store);
+    }
+
+    private void setTrackNotify(
+        @Nonnull Ref<EntityStore> ref,
+        @Nonnull Store<EntityStore> store,
+        @Nullable Boolean checked
+    ) {
+        SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
+        if (state == null || checked == null) {
+            return;
+        }
+        state.setTrackChangeNotify(checked);
+        pushState(ref, store);
     }
 
     private static void refreshHud(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
-        SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
-        if (state != null && state.isHudEnabled()) {
-            SpotifyPollingService.refreshPlayerNow(ref, store);
-        }
+        // Deferred until the settings page closes — live HUD updates kick the client.
     }
 
-    private void applyHudSettings(
-        @Nonnull Ref<EntityStore> ref,
-        @Nonnull Store<EntityStore> store,
-        @Nullable String offsetXRaw,
-        @Nullable String offsetYRaw,
-        @Nullable String trackColorRaw,
-        @Nullable String artistColorRaw,
-        @Nullable String timeColorRaw
-    ) {
-        SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
-        if (state == null) {
-            return;
-        }
-        int offsetX = parseOffset(offsetXRaw, state.getHudOffsetX());
-        int offsetY = parseOffset(offsetYRaw, state.getHudOffsetY());
-        state.setHudOffset(offsetX, offsetY);
-
-        String trackColor = parseColor(trackColorRaw);
-        String artistColor = parseColor(artistColorRaw);
-        String timeColor = parseColor(timeColorRaw);
-        if (trackColor == INVALID_COLOR || artistColor == INVALID_COLOR || timeColor == INVALID_COLOR) {
-            pushStatus(Message.translation("spotify.spotify.ui.panel.invalidColor"));
-            pushPanelState(ref, store);
-            return;
-        }
-        state.setHudTextColors(
-            trackColor == RESET_COLOR ? null : trackColor,
-            artistColor == RESET_COLOR ? null : artistColor,
-            timeColor == RESET_COLOR ? null : timeColor
-        );
-        refreshHud(ref, store);
-        pushStatus(Message.translation("spotify.spotify.ui.panel.hudApplied"));
-        pushPanelState(ref, store);
-    }
-
-    private void pushPanelState(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
+    private void pushState(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
         SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
         UICommandBuilder builder = new UICommandBuilder();
-        applyConnectionState(builder, state);
-        applySourceState(builder, state);
-        applyHudState(builder, state);
-        applyCustomizationState(builder, state);
-        if (state != null) {
-            applyHudInputs(builder, state);
-        }
+        applyState(builder, state);
         sendUpdate(builder, null, false);
     }
 
-    private static void applyHudInputs(@Nonnull UICommandBuilder builder, @Nonnull SpotifyPlayerComponent state) {
-        builder.set("#OffsetXInput.Value", String.valueOf(state.getHudOffsetX()));
-        builder.set("#OffsetYInput.Value", String.valueOf(state.getHudOffsetY()));
-        builder.set("#TrackColorInput.Value", SpotifyHudColors.resolve(state.getHudTrackColor(), SpotifyHudColors.DEFAULT_TRACK));
-        builder.set("#ArtistColorInput.Value", SpotifyHudColors.resolve(state.getHudArtistColor(), SpotifyHudColors.DEFAULT_ARTIST));
-        builder.set("#TimeColorInput.Value", SpotifyHudColors.resolve(state.getHudTimeColor(), SpotifyHudColors.DEFAULT_TIME));
-    }
+    private static void applyState(@Nonnull UICommandBuilder builder, @Nullable SpotifyPlayerComponent state) {
+        MusicSource source = state != null ? state.getMusicSource() : MusicSource.SPOTIFY;
 
-    private void pushStatus(@Nonnull Message message) {
-        UICommandBuilder builder = new UICommandBuilder();
-        builder.set("#StatusLabel.TextSpans", message);
-        sendUpdate(builder, null, false);
-    }
-
-    private static void applyConnectionState(@Nonnull UICommandBuilder builder, @Nullable SpotifyPlayerComponent state) {
-        if (state != null && state.getMusicSource().isWindows()) {
+        if (source.isWindows()) {
             if (WindowsMediaManager.get().isReady()) {
                 builder.set("#StatusLine.TextSpans", Message.translation("spotify.spotify.ui.panel.windowsReady"));
             } else {
@@ -311,78 +264,30 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         } else {
             builder.set("#StatusLine.TextSpans", Message.translation("spotify.spotify.ui.panel.notConnected"));
         }
-    }
 
-    private static void applySourceState(@Nonnull UICommandBuilder builder, @Nullable SpotifyPlayerComponent state) {
-        MusicSource source = state != null ? state.getMusicSource() : MusicSource.SPOTIFY;
-        builder.set(
-            "#SourceSpotify.TextSpans",
-            Message.translation(
-                source == MusicSource.SPOTIFY
-                    ? "spotify.spotify.ui.panel.sourceSpotifySelected"
-                    : "spotify.spotify.ui.panel.sourceSpotify"
-            )
-        );
-        builder.set(
-            "#SourceWindows.TextSpans",
-            Message.translation(
-                source == MusicSource.WINDOWS
-                    ? "spotify.spotify.ui.panel.sourceWindowsSelected"
-                    : "spotify.spotify.ui.panel.sourceWindows"
-            )
-        );
+        builder.set("#SourceSpotify.TextSpans", Message.translation("spotify.spotify.ui.panel.sourceSpotify"));
+        builder.set("#SourceWindows.TextSpans", Message.translation("spotify.spotify.ui.panel.sourceWindows"));
+        builder.set("#SourceSpotify.Disabled", source == MusicSource.SPOTIFY);
+        builder.set("#SourceWindows.Disabled", source == MusicSource.WINDOWS);
         builder.set("#SetupSpotifyButton.Visible", source == MusicSource.SPOTIFY);
-    }
 
-    private static void applyHudState(@Nonnull UICommandBuilder builder, @Nullable SpotifyPlayerComponent state) {
-        if (state != null && state.isHudEnabled()) {
-            builder.set("#HudStateLine.TextSpans", Message.translation("spotify.spotify.ui.panel.hudOn"));
-            builder.set("#ToggleHudButton.TextSpans", Message.translation("spotify.spotify.ui.panel.toggleHudOff"));
-        } else {
-            builder.set("#HudStateLine.TextSpans", Message.translation("spotify.spotify.ui.panel.hudOff"));
-            builder.set("#ToggleHudButton.TextSpans", Message.translation("spotify.spotify.ui.panel.toggleHudOn"));
-        }
-    }
+        boolean hudOn = state != null && state.isHudEnabled();
+        boolean progressOn = state == null || state.isHudProgressVisible();
+        boolean notifyOn = state == null || state.isTrackChangeNotify();
+        builder.set("#HudCheck.Value", hudOn);
+        builder.set("#ProgressCheck.Value", progressOn);
+        builder.set("#TrackNotifyCheck.Value", notifyOn);
 
-    private static void applyCustomizationState(@Nonnull UICommandBuilder builder, @Nullable SpotifyPlayerComponent state) {
-        if (state == null) {
-            return;
-        }
-        if (state.isHudProgressVisible()) {
-            builder.set(
-                "#ToggleProgressButton.TextSpans",
-                Message.translation("spotify.spotify.ui.panel.toggleProgressOff")
-            );
-        } else {
-            builder.set(
-                "#ToggleProgressButton.TextSpans",
-                Message.translation("spotify.spotify.ui.panel.toggleProgressOn")
-            );
-        }
-        builder.set(
-            "#SizeSmall.TextSpans",
-            Message.translation(
-                state.getHudScale() == SpotifyHudScale.SMALL
-                    ? "spotify.spotify.ui.panel.sizeSmallSelected"
-                    : "spotify.spotify.ui.panel.sizeSmall"
-            )
-        );
-        builder.set(
-            "#SizeMedium.TextSpans",
-            Message.translation(
-                state.getHudScale() == SpotifyHudScale.MEDIUM
-                    ? "spotify.spotify.ui.panel.sizeMediumSelected"
-                    : "spotify.spotify.ui.panel.sizeMedium"
-            )
-        );
-        builder.set(
-            "#SizeLarge.TextSpans",
-            Message.translation(
-                state.getHudScale() == SpotifyHudScale.LARGE
-                    ? "spotify.spotify.ui.panel.sizeLargeSelected"
-                    : "spotify.spotify.ui.panel.sizeLarge"
-            )
-        );
+        SpotifyHudPosition pos = state != null ? state.getHudPosition() : SpotifyHudPosition.BOTTOM_LEFT;
+        builder.set("#PosBottomLeft.Disabled", pos == SpotifyHudPosition.BOTTOM_LEFT);
+        builder.set("#PosBottomRight.Disabled", pos == SpotifyHudPosition.BOTTOM_RIGHT);
+        builder.set("#PosTopLeft.Disabled", pos == SpotifyHudPosition.TOP_LEFT);
+        builder.set("#PosTopRight.Disabled", pos == SpotifyHudPosition.TOP_RIGHT);
+
+        SpotifyHudScale scale = state != null ? state.getHudScale() : SpotifyHudScale.MEDIUM;
+        builder.set("#SizeSmall.Disabled", scale == SpotifyHudScale.SMALL);
+        builder.set("#SizeMedium.Disabled", scale == SpotifyHudScale.MEDIUM);
+        builder.set("#SizeLarge.Disabled", scale == SpotifyHudScale.LARGE);
     }
 
     private static void bind(@Nonnull UIEventBuilder eventBuilder, @Nonnull String action, @Nonnull String selector) {
@@ -394,74 +299,30 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         );
     }
 
-    private static void bindApplyHud(@Nonnull UIEventBuilder eventBuilder) {
+    private static void bindCheck(
+        @Nonnull UIEventBuilder eventBuilder,
+        @Nonnull String action,
+        @Nonnull String selector
+    ) {
         eventBuilder.addEventBinding(
-            CustomUIEventBindingType.Activating,
-            "#ApplyHudSettingsButton",
-            new EventData()
-                .append("Action", "ApplyHud")
-                .append("@OffsetX", "#OffsetXInput.Value")
-                .append("@OffsetY", "#OffsetYInput.Value")
-                .append("@TrackColor", "#TrackColorInput.Value")
-                .append("@ArtistColor", "#ArtistColorInput.Value")
-                .append("@TimeColor", "#TimeColorInput.Value"),
+            CustomUIEventBindingType.ValueChanged,
+            selector,
+            new EventData().append("Action", action).append("@Checked", selector + ".Value"),
             false
         );
-    }
-
-    private static final String INVALID_COLOR = "__invalid__";
-    private static final String RESET_COLOR = "__reset__";
-
-    @Nonnull
-    private static String parseColor(@Nullable String raw) {
-        if (raw == null || raw.isBlank()) {
-            return RESET_COLOR;
-        }
-        String normalized = SpotifyHudColors.normalize(raw.trim());
-        if (normalized == null) {
-            return INVALID_COLOR;
-        }
-        return normalized;
-    }
-
-    private static int parseOffset(@Nullable String raw, int fallback) {
-        if (raw == null || raw.isBlank()) {
-            return fallback;
-        }
-        try {
-            return Math.max(8, Math.min(200, Integer.parseInt(raw.trim())));
-        } catch (NumberFormatException e) {
-            return fallback;
-        }
     }
 
     public static final class PageData {
         public static final BuilderCodec<PageData> CODEC = BuilderCodec.builder(PageData.class, PageData::new)
             .append(new KeyedCodec<>("Action", Codec.STRING), (d, v) -> d.action = v, d -> d.action)
             .add()
-            .append(new KeyedCodec<>("@OffsetX", Codec.STRING), (d, v) -> d.offsetX = v, d -> d.offsetX)
-            .add()
-            .append(new KeyedCodec<>("@OffsetY", Codec.STRING), (d, v) -> d.offsetY = v, d -> d.offsetY)
-            .add()
-            .append(new KeyedCodec<>("@TrackColor", Codec.STRING), (d, v) -> d.trackColor = v, d -> d.trackColor)
-            .add()
-            .append(new KeyedCodec<>("@ArtistColor", Codec.STRING), (d, v) -> d.artistColor = v, d -> d.artistColor)
-            .add()
-            .append(new KeyedCodec<>("@TimeColor", Codec.STRING), (d, v) -> d.timeColor = v, d -> d.timeColor)
+            .append(new KeyedCodec<>("@Checked", Codec.BOOLEAN), (d, v) -> d.checked = v, d -> d.checked)
             .add()
             .build();
 
         @Nullable
         private String action;
         @Nullable
-        private String offsetX;
-        @Nullable
-        private String offsetY;
-        @Nullable
-        private String trackColor;
-        @Nullable
-        private String artistColor;
-        @Nullable
-        private String timeColor;
+        private Boolean checked;
     }
 }

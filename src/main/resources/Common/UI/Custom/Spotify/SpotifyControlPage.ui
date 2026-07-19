@@ -1,15 +1,14 @@
 $C = "../Common.ui";
-$S = "../Spotify/SpotifyCommon.ui";
 
 $C.@PageOverlay {
   LayoutMode: Middle;
 
   $C.@DecoratedContainer {
-    Anchor: (Width: 540);
+    Anchor: (Width: 460);
 
     #Title {
       Label #PanelTitle {
-        Style: (...$C.@TitleStyle, HorizontalAlignment: Center, TextColor: $S.@SpotifyAccent);
+        Style: (...$C.@TitleStyle, HorizontalAlignment: Center);
         Padding: (Horizontal: 19);
         Text: "";
       }
@@ -17,35 +16,17 @@ $C.@PageOverlay {
 
     #Content {
       LayoutMode: Top;
-      Padding: (Full: 20);
+      Padding: (Full: 18);
 
       Label #StatusLine {
-        Anchor: (Bottom: 8);
-        Style: (...$C.@DefaultLabelStyle, FontSize: 15, RenderBold: true, TextColor: $S.@SpotifyGreen);
-        Text: "";
-      }
-
-      Label #HudStateLine {
         Anchor: (Bottom: 14);
-        Style: (...$C.@DefaultLabelStyle, FontSize: 13, TextColor: $S.@SpotifyTextMuted);
-        Text: "";
-      }
-
-      Label #HintLine {
-        Anchor: (Bottom: 16);
-        Style: (...$C.@DefaultLabelStyle, Wrap: true, TextColor: #6b7280);
-        Text: "";
-      }
-
-      Label #StatusLabel {
-        Anchor: (Bottom: 14);
-        Style: (...$C.@DefaultLabelStyle, Wrap: true, TextColor: #f0c674);
+        Style: (...$C.@DefaultLabelStyle, FontSize: 13, TextColor: #c5cdd6);
         Text: "";
       }
 
       Label #SourceLabel {
         Anchor: (Bottom: 6);
-        Style: (RenderBold: true, TextColor: #94a7bb, FontSize: 12);
+        Style: (...$C.@DefaultLabelStyle, FontSize: 12, TextColor: #8b95a1);
         Text: "";
       }
 
@@ -55,52 +36,80 @@ $C.@PageOverlay {
 
         $C.@TextButton #SourceSpotify {
           FlexWeight: 1;
-          Anchor: (Right: 6, Height: 32);
+          Anchor: (Right: 6, Height: 34);
           Text: "";
         }
 
         $C.@TextButton #SourceWindows {
           FlexWeight: 1;
-          Anchor: (Height: 32);
+          Anchor: (Height: 34);
           Text: "";
         }
       }
 
       $C.@TextButton #SetupSpotifyButton {
-        Anchor: (Height: 40, Bottom: 10);
+        Anchor: (Height: 36, Bottom: 8);
         Text: "";
       }
 
       Group #SetupUrlSection {
         LayoutMode: Top;
         Visible: false;
-        Anchor: (Bottom: 16);
+        Anchor: (Bottom: 12);
 
         Label #SetupUrlLabel {
           Anchor: (Bottom: 4);
-          Style: (FontSize: 11, TextColor: #94a7bb, Wrap: true);
+          Style: (...$C.@DefaultLabelStyle, FontSize: 11, TextColor: #8b95a1, Wrap: true);
           Text: "";
         }
 
         $C.@TextField #SetupUrlInput {
-          Anchor: (Height: 34);
+          Anchor: (Height: 32);
         }
       }
 
-      Label #HudSettingsTitle {
+      Label #DisplayLabel {
         Anchor: (Bottom: 8);
-        Style: (...$C.@DefaultLabelStyle, FontSize: 14, RenderBold: true, TextColor: #e8eaed);
+        Style: (...$C.@DefaultLabelStyle, FontSize: 12, TextColor: #8b95a1);
         Text: "";
       }
 
-      $C.@TextButton #ToggleHudButton {
-        Anchor: (Height: 36, Bottom: 10);
-        Text: "";
+      Group #HudCheckRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 6);
+        $C.@CheckBox #HudCheck {}
+        Label #HudCheckLabel {
+          Text: "";
+          Style: (...$C.@DefaultLabelStyle, VerticalAlignment: Center);
+          Anchor: (Left: 10);
+        }
+      }
+
+      Group #ProgressCheckRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 6);
+        $C.@CheckBox #ProgressCheck {}
+        Label #ProgressCheckLabel {
+          Text: "";
+          Style: (...$C.@DefaultLabelStyle, VerticalAlignment: Center);
+          Anchor: (Left: 10);
+        }
+      }
+
+      Group #TrackNotifyRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 12);
+        $C.@CheckBox #TrackNotifyCheck {}
+        Label #TrackNotifyCheckLabel {
+          Text: "";
+          Style: (...$C.@DefaultLabelStyle, VerticalAlignment: Center);
+          Anchor: (Left: 10);
+        }
       }
 
       Label #PositionLabel {
         Anchor: (Bottom: 6);
-        Style: (RenderBold: true, TextColor: #94a7bb, FontSize: 12);
+        Style: (...$C.@DefaultLabelStyle, FontSize: 12, TextColor: #8b95a1);
         Text: "";
       }
 
@@ -108,172 +117,75 @@ $C.@PageOverlay {
         LayoutMode: Left;
         Anchor: (Bottom: 10);
 
-        $C.@TextButton #PosBottomLeft {
+        $C.@SecondaryTextButton #PosBottomLeft {
           FlexWeight: 1;
-          Anchor: (Right: 6, Height: 32);
+          Anchor: (Right: 4, Height: 30);
           Text: "";
         }
 
-        $C.@TextButton #PosBottomRight {
+        $C.@SecondaryTextButton #PosBottomRight {
           FlexWeight: 1;
-          Anchor: (Right: 6, Height: 32);
+          Anchor: (Right: 4, Height: 30);
           Text: "";
         }
 
-        $C.@TextButton #PosTopLeft {
+        $C.@SecondaryTextButton #PosTopLeft {
           FlexWeight: 1;
-          Anchor: (Right: 6, Height: 32);
+          Anchor: (Right: 4, Height: 30);
           Text: "";
         }
 
-        $C.@TextButton #PosTopRight {
+        $C.@SecondaryTextButton #PosTopRight {
           FlexWeight: 1;
-          Anchor: (Height: 32);
+          Anchor: (Height: 30);
           Text: "";
         }
       }
 
       Label #SizeLabel {
         Anchor: (Bottom: 6);
-        Style: (RenderBold: true, TextColor: #94a7bb, FontSize: 12);
+        Style: (...$C.@DefaultLabelStyle, FontSize: 12, TextColor: #8b95a1);
         Text: "";
       }
 
       Group #SizeButtons {
         LayoutMode: Left;
-        Anchor: (Bottom: 10);
+        Anchor: (Bottom: 14);
 
-        $C.@TextButton #SizeSmall {
+        $C.@SecondaryTextButton #SizeSmall {
           FlexWeight: 1;
-          Anchor: (Right: 6, Height: 32);
+          Anchor: (Right: 4, Height: 30);
           Text: "";
         }
 
-        $C.@TextButton #SizeMedium {
+        $C.@SecondaryTextButton #SizeMedium {
           FlexWeight: 1;
-          Anchor: (Right: 6, Height: 32);
+          Anchor: (Right: 4, Height: 30);
           Text: "";
         }
 
-        $C.@TextButton #SizeLarge {
+        $C.@SecondaryTextButton #SizeLarge {
           FlexWeight: 1;
-          Anchor: (Height: 32);
+          Anchor: (Height: 30);
           Text: "";
         }
       }
 
-      $C.@TextButton #ToggleProgressButton {
-        Anchor: (Height: 32, Bottom: 10);
-        Text: "";
-      }
-
-      Group #OffsetRow {
+      Group #FooterRow {
         LayoutMode: Left;
-        Anchor: (Bottom: 12);
+        Anchor: (Bottom: 0);
 
-        Group {
-          LayoutMode: Top;
+        $C.@TextButton #OpenControlsButton {
           FlexWeight: 1;
-          Anchor: (Right: 8);
-
-          Label #OffsetXLabel {
-            Anchor: (Bottom: 4);
-            Style: (FontSize: 11, TextColor: #94a7bb);
-            Text: "";
-          }
-
-          $C.@TextField #OffsetXInput {
-            Anchor: (Height: 34);
-            PlaceholderText: "24";
-          }
+          Anchor: (Right: 8, Height: 36);
+          Text: "";
         }
 
-        Group {
-          LayoutMode: Top;
+        $C.@CancelTextButton #CloseButton {
           FlexWeight: 1;
-
-          Label #OffsetYLabel {
-            Anchor: (Bottom: 4);
-            Style: (FontSize: 11, TextColor: #94a7bb);
-            Text: "";
-          }
-
-          $C.@TextField #OffsetYInput {
-            Anchor: (Height: 34);
-            PlaceholderText: "24";
-          }
+          Anchor: (Height: 36);
+          Text: "";
         }
-      }
-
-      Label #TextColorsLabel {
-        Anchor: (Bottom: 6);
-        Style: (RenderBold: true, TextColor: #94a7bb, FontSize: 12);
-        Text: "";
-      }
-
-      Group #TextColorsRow {
-        LayoutMode: Left;
-        Anchor: (Bottom: 16);
-
-        Group {
-          LayoutMode: Top;
-          FlexWeight: 1;
-          Anchor: (Right: 8);
-
-          Label #TrackColorLabel {
-            Anchor: (Bottom: 4);
-            Style: (FontSize: 11, TextColor: #94a7bb);
-            Text: "";
-          }
-
-          $C.@TextField #TrackColorInput {
-            Anchor: (Height: 34);
-            PlaceholderText: "#e8eaed";
-          }
-        }
-
-        Group {
-          LayoutMode: Top;
-          FlexWeight: 1;
-          Anchor: (Right: 8);
-
-          Label #ArtistColorLabel {
-            Anchor: (Bottom: 4);
-            Style: (FontSize: 11, TextColor: #94a7bb);
-            Text: "";
-          }
-
-          $C.@TextField #ArtistColorInput {
-            Anchor: (Height: 34);
-            PlaceholderText: "#9aa0a6";
-          }
-        }
-
-        Group {
-          LayoutMode: Top;
-          FlexWeight: 1;
-
-          Label #TimeColorLabel {
-            Anchor: (Bottom: 4);
-            Style: (FontSize: 11, TextColor: #94a7bb);
-            Text: "";
-          }
-
-          $C.@TextField #TimeColorInput {
-            Anchor: (Height: 34);
-            PlaceholderText: "#6b7280";
-          }
-        }
-      }
-
-      $C.@TextButton #ApplyHudSettingsButton {
-        Anchor: (Height: 36, Bottom: 10);
-        Text: "";
-      }
-
-      $C.@CancelTextButton #CloseButton {
-        Anchor: (Height: 36);
-        Text: "";
       }
     }
   }

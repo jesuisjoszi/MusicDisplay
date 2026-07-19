@@ -3,6 +3,7 @@ package com.jagod.spotify;
 import com.jagod.spotify.command.SpotifyCommand;
 import com.jagod.spotify.data.SpotifyPlayerComponent;
 import com.jagod.spotify.oauth.SpotifyOAuthService;
+import com.jagod.spotify.service.SpotifyAlbumArtService;
 import com.jagod.spotify.service.SpotifyControlsRegistry;
 import com.jagod.spotify.service.SpotifyPollingService;
 import com.jagod.spotify.ui.SpotifyHudSupport;
@@ -13,7 +14,6 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.event.EventPriority;
 import com.hypixel.hytale.logger.HytaleLogger;
-import com.hypixel.hytale.protocol.packets.setup.RequestCommonAssetsRebuild;
 import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.asset.AssetModule;
 import com.hypixel.hytale.server.core.asset.AssetPackRegisterEvent;
@@ -24,7 +24,6 @@ import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -54,6 +53,7 @@ public final class SpotifyPlugin extends JavaPlugin {
     @Override
     protected void start() {
         ensureAssetPackLoaded();
+        SpotifyAlbumArtService.syncFromDataDirectory();
 
         this.getCommandRegistry().registerCommand(new SpotifyCommand());
 
@@ -90,7 +90,7 @@ public final class SpotifyPlugin extends JavaPlugin {
 
         SpotifyPollingService.start();
         WindowsMediaManager.get().start();
-        LOGGER.atInfo().log("MusicDisplay started — use /spotify to open the control panel");
+        LOGGER.atInfo().log("MusicDisplay started — use /musicdisplay or /msd");
     }
 
     @Override
@@ -115,10 +115,9 @@ public final class SpotifyPlugin extends JavaPlugin {
             .dispatch(new AssetPackRegisterEvent(pack));
         CommonAssetModule commonAssets = CommonAssetModule.get();
         if (commonAssets != null) {
+            // Load into the registry only — do not broadcast RequestCommonAssetsRebuild while
+            // players may already be in Playing (that triggers WorldLoadProgress disconnects).
             commonAssets.loadCommonAssets(pack, System.nanoTime());
-            if (Universe.get().getPlayerCount() > 0) {
-                Universe.get().broadcastPacketNoCache(new RequestCommonAssetsRebuild());
-            }
         }
     }
 }

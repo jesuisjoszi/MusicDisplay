@@ -10,17 +10,22 @@ import com.jagod.spotify.ui.SpotifyNowPlayingHud;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.protocol.packets.interface_.NotificationStyle;
 import com.hypixel.hytale.server.core.HytaleServer;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.util.NotificationUtil;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public final class SpotifyPollingService {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
@@ -58,6 +63,7 @@ public final class SpotifyPollingService {
 
     public static void clearPlayer(@Nonnull UUID playerUuid) {
         LAST_INFO.remove(playerUuid);
+        SpotifyAlbumArtService.clearPlayer(playerUuid);
     }
 
     private static void pollAllPlayers() {
@@ -116,13 +122,17 @@ public final class SpotifyPollingService {
 
         SpotifyNowPlayingInfo info;
         if (fetchApi) {
+            String previousTrack = state.getLastTrack();
+            String previousArtist = state.getLastArtist();
             if (state.getMusicSource().isWindows()) {
                 info = WindowsMediaManager.get().getStatus();
+                state.setLastVolumePercent(WindowsMediaManager.get().getVolumePercent());
             } else {
                 info = SpotifyNowPlayingInfo.fetch(state);
             }
             LAST_INFO.put(playerRef.getUuid(), info);
             state.setNowPlaying(info.getTrackName(), info.getArtistName(), info.getStatus().name());
+            maybeNotifyTrackChange(playerRef, state, previousTrack, previousArtist, info);
         } else {
             info = LAST_INFO.get(playerRef.getUuid());
             if (info == null) {
@@ -131,7 +141,19 @@ public final class SpotifyPollingService {
             if (state.getMusicSource().isWindows()) {
                 info = WindowsMediaManager.get().getStatus();
                 LAST_INFO.put(playerRef.getUuid(), info);
+                state.setLastVolumePercent(WindowsMediaManager.get().getVolumePercent());
+                state.setNowPlaying(info.getTrackName(), info.getArtistName(), info.getStatus().name());
             }
+        }
+
+        // Custom pages and HUD share the same CustomUI command channel — updating HUD
+        // selectors (e.g. #TrackLine) while a page is open disconnects the client.
+        if (player.getPageManager().getCustomPage() != null) {
+            SpotifyControlsPage controls = SpotifyControlsRegistry.get(playerRef.getUuid());
+            if (controls != null) {
+                controls.refreshFromPolling(state);
+            }
+            return;
         }
 
         SpotifyNowPlayingHud hud = SpotifyHudSupport.obtainHud(player, playerRef);
@@ -141,5 +163,37 @@ public final class SpotifyPollingService {
         if (controls != null) {
             controls.refreshFromPolling(state);
         }
+    }
+
+    private static void maybeNotifyTrackChange(
+        @Nonnull PlayerRef playerRef,
+        @Nonnull SpotifyPlayerComponent state,
+        @Nullable String previousTrack,
+        @Nullable String previousArtist,
+        @Nonnull SpotifyNowPlayingInfo info
+    ) {
+        if (!state.isTrackChangeNotify()) {
+            return;
+        }
+        String track = info.getTrackName();
+        if (track == null || track.isBlank()) {
+            return;
+        }
+        if (info.getStatus() != SpotifyNowPlayingInfo.Status.PLAYING
+            && info.getStatus() != SpotifyNowPlayingInfo.Status.PAUSED) {
+            return;
+        }
+        String artist = info.getArtistName();
+        if (Objects.equals(previousTrack, track) && Objects.equals(previousArtist, artist)) {
+            return;
+        }
+        if (previousTrack == null || previousTrack.isBlank()) {
+            return;
+        }
+        Message title = Message.raw(track);
+        Message body = artist == null || artist.isBlank()
+            ? Message.translation("spotify.spotify.hud.playing")
+            : Message.translation("spotify.spotify.hud.artist").param("artist", artist);
+        NotificationUtil.sendNotification(playerRef.getPacketHandler(), title, body, NotificationStyle.Default);
     }
 }

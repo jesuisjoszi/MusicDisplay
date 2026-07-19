@@ -49,6 +49,12 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
         .add()
         .append(new KeyedCodec<>("HudProgressVisible", Codec.BOOLEAN), (c, v) -> c.hudProgressVisible = v == null || v, c -> c.hudProgressVisible)
         .add()
+        .append(
+            new KeyedCodec<>("TrackChangeNotify", Codec.BOOLEAN),
+            (c, v) -> c.trackChangeNotify = v == null || v,
+            c -> c.trackChangeNotify
+        )
+        .add()
         .append(new KeyedCodec<>("HudTrackColor", Codec.STRING), (c, v) -> c.hudTrackColor = blankToNull(v), c -> c.hudTrackColor)
         .add()
         .append(new KeyedCodec<>("HudArtistColor", Codec.STRING), (c, v) -> c.hudArtistColor = blankToNull(v), c -> c.hudArtistColor)
@@ -87,6 +93,8 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
     @Nonnull
     private SpotifyHudScale hudScale = SpotifyHudScale.MEDIUM;
     private boolean hudProgressVisible = true;
+    private boolean trackChangeNotify = true;
+    private int lastVolumePercent = 50;
     @Nullable
     private String hudTrackColor;
     @Nullable
@@ -171,6 +179,18 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
 
     public boolean isHudProgressVisible() {
         return hudProgressVisible;
+    }
+
+    public boolean isTrackChangeNotify() {
+        return trackChangeNotify;
+    }
+
+    public int getLastVolumePercent() {
+        return lastVolumePercent;
+    }
+
+    public void setLastVolumePercent(int lastVolumePercent) {
+        this.lastVolumePercent = Math.max(0, Math.min(100, lastVolumePercent));
     }
 
     @Nullable
@@ -280,6 +300,10 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
         this.hudProgressVisible = hudProgressVisible;
     }
 
+    public void setTrackChangeNotify(boolean trackChangeNotify) {
+        this.trackChangeNotify = trackChangeNotify;
+    }
+
     public void setHudTextColors(@Nullable String trackColor, @Nullable String artistColor, @Nullable String timeColor) {
         this.hudTrackColor = trackColor;
         this.hudArtistColor = artistColor;
@@ -307,6 +331,8 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
         copy.hudOffsetY = hudOffsetY;
         copy.hudScale = hudScale;
         copy.hudProgressVisible = hudProgressVisible;
+        copy.trackChangeNotify = trackChangeNotify;
+        copy.lastVolumePercent = lastVolumePercent;
         copy.hudTrackColor = hudTrackColor;
         copy.hudArtistColor = hudArtistColor;
         copy.hudTimeColor = hudTimeColor;

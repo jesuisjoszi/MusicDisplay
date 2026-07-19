@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 
 public final class SpotifyControlsPage extends InteractiveCustomUIPage<SpotifyControlsPage.PageData> {
     private boolean templateAppended;
+    private long lastVolumeUiMs;
 
     public SpotifyControlsPage(@Nonnull PlayerRef playerRef) {
         super(playerRef, CustomPageLifetime.CanDismissOrCloseThroughInteraction, PageData.CODEC);
@@ -43,15 +44,27 @@ public final class SpotifyControlsPage extends InteractiveCustomUIPage<SpotifyCo
         commandBuilder.set("#PanelTitle.TextSpans", Message.translation("spotify.spotify.controls.title"));
         commandBuilder.set("#PrevButton.TextSpans", Message.translation("spotify.spotify.controls.prev"));
         commandBuilder.set("#NextButton.TextSpans", Message.translation("spotify.spotify.controls.next"));
+        commandBuilder.set("#VolumeLabel.TextSpans", Message.translation("spotify.spotify.controls.volume"));
         commandBuilder.set("#CloseButton.TextSpans", Message.translation("spotify.spotify.controls.close"));
         commandBuilder.set("#StatusLabel.TextSpans", Message.raw(""));
 
-        applyDisplay(commandBuilder, store.getComponent(ref, SpotifyPlayerComponent.getComponentType()));
+        SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
+        if (state != null) {
+            int volume = SpotifyPlaybackSupport.readVolumePercent(state);
+            state.setLastVolumePercent(volume);
+        }
+        applyDisplay(commandBuilder, state);
 
         bind(eventBuilder, "Prev", "#PrevButton");
         bind(eventBuilder, "PlayPause", "#PlayPauseButton");
         bind(eventBuilder, "Next", "#NextButton");
         bind(eventBuilder, "Close", "#CloseButton");
+        eventBuilder.addEventBinding(
+            CustomUIEventBindingType.ValueChanged,
+            "#VolumeSlider",
+            new EventData().append("Action", "Volume").append("@Volume", "#VolumeSlider.Value"),
+            false
+        );
     }
 
     @Override
@@ -64,6 +77,7 @@ public final class SpotifyControlsPage extends InteractiveCustomUIPage<SpotifyCo
             case "Prev" -> runAction(ref, store, SpotifyPlaybackSupport.Action.PREVIOUS);
             case "Next" -> runAction(ref, store, SpotifyPlaybackSupport.Action.NEXT);
             case "PlayPause" -> runAction(ref, store, SpotifyPlaybackSupport.Action.TOGGLE);
+            case "Volume" -> runVolume(ref, store, data.volume);
             default -> {}
         }
     }
@@ -100,6 +114,36 @@ public final class SpotifyControlsPage extends InteractiveCustomUIPage<SpotifyCo
         }
     }
 
+    private void runVolume(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, @Nullable Integer volumeRaw) {
+        if (volumeRaw == null) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (now - lastVolumeUiMs < 80L) {
+            return;
+        }
+        lastVolumeUiMs = now;
+
+        SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
+        PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
+        if (state == null || playerRef == null) {
+            return;
+        }
+
+        int volume = Math.max(0, Math.min(100, volumeRaw));
+        SpotifyPlaybackSupport.Result result = SpotifyPlaybackSupport.setVolume(state, volume);
+        if (result == SpotifyPlaybackSupport.Result.OK) {
+            UICommandBuilder builder = new UICommandBuilder();
+            builder.set("#VolumeSlider.Value", volume);
+            builder.set("#VolumeValue.TextSpans", Message.raw(volume + "%"));
+            builder.set("#StatusLabel.TextSpans", Message.raw(""));
+            sendUpdate(builder, null, false);
+        } else {
+            SpotifyPlaybackSupport.apply(playerRef, ref, store, state, result);
+            pushStatus(resultMessage(result));
+        }
+    }
+
     private void pushDisplay(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
         SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
         UICommandBuilder builder = new UICommandBuilder();
@@ -114,11 +158,22 @@ public final class SpotifyControlsPage extends InteractiveCustomUIPage<SpotifyCo
     }
 
     private static void applyDisplay(@Nonnull UICommandBuilder builder, @Nullable SpotifyPlayerComponent state) {
-        if (state == null || !state.hasCredentials()) {
+        if (state == null) {
             builder.set("#TrackLine.TextSpans", Message.translation("spotify.spotify.hud.notConfigured"));
             builder.set("#ArtistLine.TextSpans", Message.raw(""));
             builder.set("#StatusLine.TextSpans", Message.raw(""));
             builder.set("#PlayPauseButton.TextSpans", Message.translation("spotify.spotify.controls.play"));
+            applyVolume(builder, 50);
+            return;
+        }
+
+        boolean ready = state.getMusicSource().isWindows() || state.hasCredentials();
+        if (!ready) {
+            builder.set("#TrackLine.TextSpans", Message.translation("spotify.spotify.hud.notConfigured"));
+            builder.set("#ArtistLine.TextSpans", Message.raw(""));
+            builder.set("#StatusLine.TextSpans", Message.raw(""));
+            builder.set("#PlayPauseButton.TextSpans", Message.translation("spotify.spotify.controls.play"));
+            applyVolume(builder, state.getLastVolumePercent());
             return;
         }
 
@@ -153,6 +208,14 @@ public final class SpotifyControlsPage extends InteractiveCustomUIPage<SpotifyCo
         } else {
             builder.set("#PlayPauseButton.TextSpans", Message.translation("spotify.spotify.controls.play"));
         }
+
+        applyVolume(builder, state.getLastVolumePercent());
+    }
+
+    private static void applyVolume(@Nonnull UICommandBuilder builder, int volume) {
+        int clamped = Math.max(0, Math.min(100, volume));
+        builder.set("#VolumeSlider.Value", clamped);
+        builder.set("#VolumeValue.TextSpans", Message.raw(clamped + "%"));
     }
 
     @Nonnull
@@ -187,9 +250,13 @@ public final class SpotifyControlsPage extends InteractiveCustomUIPage<SpotifyCo
         public static final BuilderCodec<PageData> CODEC = BuilderCodec.builder(PageData.class, PageData::new)
             .append(new KeyedCodec<>("Action", Codec.STRING), (d, v) -> d.action = v, d -> d.action)
             .add()
+            .append(new KeyedCodec<>("@Volume", Codec.INTEGER), (d, v) -> d.volume = v, d -> d.volume)
+            .add()
             .build();
 
         @Nullable
         private String action;
+        @Nullable
+        private Integer volume;
     }
 }

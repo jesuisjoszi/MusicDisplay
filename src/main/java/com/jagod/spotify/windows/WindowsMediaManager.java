@@ -38,6 +38,10 @@ public final class WindowsMediaManager {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private volatile boolean bridgeReady;
     private volatile SpotifyNowPlayingInfo currentInfo = SpotifyNowPlayingInfo.idle();
+    private volatile int volumePercent = 50;
+    @Nullable
+    private volatile Path artworkPath;
+    private long lastVolumeCmdMs;
     @Nullable
     private Process bridgeProcess;
     @Nullable
@@ -110,6 +114,26 @@ public final class WindowsMediaManager {
 
     public void previous() {
         sendCommand("previous");
+    }
+
+    public int getVolumePercent() {
+        return volumePercent;
+    }
+
+    @Nullable
+    public Path getArtworkPath() {
+        return artworkPath;
+    }
+
+    public void setVolume(int percent) {
+        int clamped = Math.max(0, Math.min(100, percent));
+        volumePercent = clamped;
+        long now = System.currentTimeMillis();
+        if (now - lastVolumeCmdMs < 100L) {
+            return;
+        }
+        lastVolumeCmdMs = now;
+        sendCommand("volume " + clamped);
     }
 
     private void extractBridge() throws Exception {
@@ -193,6 +217,11 @@ public final class WindowsMediaManager {
         boolean playing = obj.has("IsPlaying") && obj.get("IsPlaying").getAsBoolean();
         double positionSeconds = obj.has("PositionSeconds") ? obj.get("PositionSeconds").getAsDouble() : 0.0;
         double durationSeconds = obj.has("DurationSeconds") ? obj.get("DurationSeconds").getAsDouble() : 0.0;
+        if (obj.has("VolumePercent") && !obj.get("VolumePercent").isJsonNull()) {
+            volumePercent = Math.max(0, Math.min(100, obj.get("VolumePercent").getAsInt()));
+        }
+        String art = stringOrEmpty(obj, "ArtworkPath");
+        artworkPath = art.isBlank() ? null : Path.of(art);
 
         if (title.isBlank() && artist.isBlank()) {
             currentInfo = SpotifyNowPlayingInfo.idle();
@@ -205,6 +234,8 @@ public final class WindowsMediaManager {
             playing ? SpotifyNowPlayingInfo.Status.PLAYING : SpotifyNowPlayingInfo.Status.PAUSED,
             title.isBlank() ? "Unknown" : title,
             artist.isBlank() ? "Unknown" : artist,
+            null,
+            artworkPath,
             progressMs,
             durationMs
         );

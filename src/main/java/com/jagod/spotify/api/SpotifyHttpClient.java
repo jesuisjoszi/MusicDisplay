@@ -94,6 +94,29 @@ public final class SpotifyHttpClient {
     }
 
     @Nullable
+    public static byte[] getBytes(@Nonnull String url, @Nonnull Map<String, String> headers) {
+        try {
+            HttpURLConnection http = open(url, "GET", headers);
+            int code = http.getResponseCode();
+            InputStream in = code >= 200 && code < 300 ? http.getInputStream() : http.getErrorStream();
+            if (in == null) {
+                http.disconnect();
+                return null;
+            }
+            byte[] body = readAll(in);
+            http.disconnect();
+            if (code < 200 || code >= 300) {
+                LOGGER.atFine().log("GET bytes %s failed: HTTP %s", url, code);
+                return null;
+            }
+            return body;
+        } catch (Exception e) {
+            LOGGER.atFine().withCause(e).log("GET bytes %s failed", url);
+            return null;
+        }
+    }
+
+    @Nullable
     public static String postForm(
         @Nonnull String url,
         @Nonnull Map<String, String> headers,

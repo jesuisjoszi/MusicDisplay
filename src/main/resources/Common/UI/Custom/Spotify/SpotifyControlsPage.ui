@@ -39,7 +39,7 @@ $C.@PageOverlay {
 
       Group #ControlsRow {
         LayoutMode: Left;
-        Anchor: (Bottom: 16);
+        Anchor: (Bottom: 14);
 
         $C.@TextButton #PrevButton {
           FlexWeight: 1;
@@ -57,6 +57,35 @@ $C.@PageOverlay {
           FlexWeight: 1;
           Anchor: (Height: 40);
           Text: "";
+        }
+      }
+
+      Label #VolumeLabel {
+        Anchor: (Bottom: 4);
+        Style: (RenderBold: true, TextColor: #94a7bb, FontSize: 12);
+        Text: "";
+      }
+
+      Group #VolumeRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 14, Height: 30);
+
+        Group {
+          LayoutMode: Middle;
+          FlexWeight: 1;
+          Anchor: (Right: 10, Height: 30);
+          $C.@Slider #VolumeSlider {
+            @Anchor = (Width: 320);
+            Value: 50;
+            Min: 0;
+            Max: 100;
+          }
+        }
+
+        Label #VolumeValue {
+          Anchor: (Width: 48, Top: 5);
+          Style: (...$C.@DefaultLabelStyle, TextColor: #d8ccb8);
+          Text: "50%";
         }
       }
 

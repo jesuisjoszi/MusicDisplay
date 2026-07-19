@@ -20,6 +20,42 @@ public final class SpotifyPlaybackSupport {
         TOGGLE
     }
 
+    @Nonnull
+    public static Result setVolume(@Nonnull SpotifyPlayerComponent state, int volumePercent) {
+        int clamped = Math.max(0, Math.min(100, volumePercent));
+        state.setLastVolumePercent(clamped);
+        if (state.getMusicSource().isWindows()) {
+            WindowsMediaManager media = WindowsMediaManager.get();
+            if (!WindowsMediaManager.isOsWindows() || !media.isReady()) {
+                return Result.WINDOWS_UNAVAILABLE;
+            }
+            media.setVolume(clamped);
+            return Result.OK;
+        }
+        if (!state.hasCredentials()) {
+            return Result.NOT_CONNECTED;
+        }
+        if (!state.hasPlaybackScope()) {
+            return Result.MISSING_SCOPE;
+        }
+        if (!SpotifyProfile.isPremium(state)) {
+            return Result.PREMIUM_REQUIRED;
+        }
+        return mapCode(SpotifyPlaybackService.setVolume(state, clamped), state);
+    }
+
+    public static int readVolumePercent(@Nonnull SpotifyPlayerComponent state) {
+        if (state.getMusicSource().isWindows()) {
+            return WindowsMediaManager.get().getVolumePercent();
+        }
+        int fromApi = SpotifyPlaybackService.getVolumePercent(state);
+        if (fromApi >= 0) {
+            state.setLastVolumePercent(fromApi);
+            return fromApi;
+        }
+        return state.getLastVolumePercent();
+    }
+
     public enum Result {
         OK,
         NOT_CONNECTED,

@@ -4,11 +4,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public enum SpotifyHudScale {
-    SMALL(260, 11, 9, 8, 4),
-    MEDIUM(340, 14, 11, 9, 5),
-    LARGE(420, 17, 13, 10, 6);
+    SMALL(360, 48, 11, 9, 8, 4),
+    MEDIUM(440, 64, 14, 11, 9, 5),
+    LARGE(520, 80, 17, 13, 10, 6);
 
     private final int panelWidth;
+    private final int coverSize;
     private final int trackFontSize;
     private final int artistFontSize;
     private final int timeFontSize;
@@ -16,12 +17,14 @@ public enum SpotifyHudScale {
 
     SpotifyHudScale(
         int panelWidth,
+        int coverSize,
         int trackFontSize,
         int artistFontSize,
         int timeFontSize,
         int progressHeight
     ) {
         this.panelWidth = panelWidth;
+        this.coverSize = coverSize;
         this.trackFontSize = trackFontSize;
         this.artistFontSize = artistFontSize;
         this.timeFontSize = timeFontSize;
@@ -30,6 +33,10 @@ public enum SpotifyHudScale {
 
     public int getPanelWidth() {
         return panelWidth;
+    }
+
+    public int getCoverSize() {
+        return coverSize;
     }
 
     public int getTrackFontSize() {

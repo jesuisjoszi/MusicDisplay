@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 
 public final class SpotifyHudLayout {
     public static final int DEFAULT_OFFSET = 24;
-    public static final int PANEL_WIDTH = 340;
+    public static final int PANEL_WIDTH = 440;
 
     private SpotifyHudLayout() {}
 
@@ -19,6 +19,8 @@ public final class SpotifyHudLayout {
     public static void applyAppearance(@Nonnull UICommandBuilder builder, @Nonnull SpotifyPlayerComponent state) {
         applyRootAnchor(builder, state);
         SpotifyHudScale scale = state.getHudScale();
+        builder.setObject("#AlbumArtBox.Anchor", buildCoverBoxAnchor(scale.getCoverSize()));
+        builder.setObject("#AlbumArt.Anchor", buildCoverImageAnchor(scale.getCoverSize()));
         builder.set("#TrackLine.Style.FontSize", scale.getTrackFontSize());
         builder.set("#ArtistLine.Style.FontSize", scale.getArtistFontSize());
         builder.set("#TrackLine.Style.TextColor", SpotifyHudColors.track(state));
@@ -30,6 +32,23 @@ public final class SpotifyHudLayout {
         builder.set("#TimeBadge.Style.RenderBold", false);
         builder.setObject("#TrackProgressBar.Anchor", buildProgressAnchor(scale.getProgressHeight()));
         builder.set("#ProgressSection.Visible", state.isHudProgressVisible());
+    }
+
+    @Nonnull
+    private static Anchor buildCoverBoxAnchor(int size) {
+        Anchor anchor = new Anchor();
+        anchor.setWidth(Value.of(size));
+        anchor.setHeight(Value.of(size));
+        anchor.setRight(Value.of(12));
+        return anchor;
+    }
+
+    @Nonnull
+    private static Anchor buildCoverImageAnchor(int size) {
+        Anchor anchor = new Anchor();
+        anchor.setWidth(Value.of(size));
+        anchor.setHeight(Value.of(size));
+        return anchor;
     }
 
     @Nonnull

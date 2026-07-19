@@ -3,7 +3,7 @@ $S = "../Spotify/SpotifyCommon.ui";
 
 Group #SpotifyHudRoot {
   LayoutMode: Top;
-  Anchor: (Bottom: 24, Left: 24, Width: 340);
+  Anchor: (Bottom: 24, Left: 24, Width: 440);
 
   Group #SpotifyHudPanel {
     LayoutMode: Top;
@@ -11,33 +11,49 @@ Group #SpotifyHudRoot {
     Padding: (Horizontal: 12, Vertical: 10);
 
     Group #ContentInset {
-      LayoutMode: Top;
-      Padding: (Horizontal: 10);
+      LayoutMode: Left;
+      Padding: (Horizontal: 6);
 
-      Label #TrackLine {
-        Style: $S.@SpotifyTrackStyle;
-        Anchor: (Bottom: 2);
-        Text: "";
+      Group #AlbumArtBox {
+        LayoutMode: Middle;
+        Anchor: (Width: 64, Height: 64, Right: 12);
+
+        AssetImage #AlbumArt {
+          Anchor: (Width: 64, Height: 64);
+          FallbackTexturePath: "UI/Custom/Pages/Memories/MissingIcon.png";
+        }
       }
 
-      Label #ArtistLine {
-        Style: $S.@SpotifyArtistStyle;
-        Anchor: (Bottom: 8);
-        Text: "";
-      }
-
-      Group #ProgressSection {
+      Group #TextColumn {
         LayoutMode: Top;
+        FlexWeight: 1;
+        Anchor: (Height: 64);
 
-        Label #TimeBadge {
-          Anchor: (Bottom: 4);
-          Style: (...$S.@SpotifyTimeStyle, HorizontalAlignment: End);
+        Label #TrackLine {
+          Style: $S.@SpotifyTrackStyle;
+          Anchor: (Bottom: 2);
           Text: "";
         }
 
-        $S.@SpotifyProgressBar #TrackProgressBar {
-          @Anchor = (Left: 0, Right: 0);
-          Value: 0.0;
+        Label #ArtistLine {
+          Style: $S.@SpotifyArtistStyle;
+          Anchor: (Bottom: 8);
+          Text: "";
+        }
+
+        Group #ProgressSection {
+          LayoutMode: Top;
+
+          Label #TimeBadge {
+            Anchor: (Bottom: 4);
+            Style: (...$S.@SpotifyTimeStyle, HorizontalAlignment: End);
+            Text: "";
+          }
+
+          $S.@SpotifyProgressBar #TrackProgressBar {
+            @Anchor = (Left: 0, Right: 0);
+            Value: 0.0;
+          }
         }
       }
     }

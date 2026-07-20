@@ -150,7 +150,7 @@ $C.@PageOverlay {
 
       Group #SizeButtons {
         LayoutMode: Left;
-        Anchor: (Bottom: 14);
+        Anchor: (Bottom: 12);
 
         $C.@SecondaryTextButton #SizeSmall {
           FlexWeight: 1;
@@ -167,6 +167,74 @@ $C.@PageOverlay {
         $C.@SecondaryTextButton #SizeLarge {
           FlexWeight: 1;
           Anchor: (Height: 30);
+          Text: "";
+        }
+      }
+
+      Label #ColorsLabel {
+        Anchor: (Bottom: 6);
+        Style: (...$C.@DefaultLabelStyle, FontSize: 12, TextColor: #8b95a1);
+        Text: "";
+      }
+
+      Group #ColorTrackRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 4, Height: 32);
+        Label #ColorTrackLabel {
+          Anchor: (Width: 70, Top: 6);
+          Style: (...$C.@DefaultLabelStyle, FontSize: 12, TextColor: #c5cdd6);
+          Text: "";
+        }
+        $C.@TextField #ColorTrackInput {
+          FlexWeight: 1;
+          Anchor: (Height: 32);
+          PlaceholderText: "#e8eaed";
+        }
+      }
+
+      Group #ColorArtistRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 4, Height: 32);
+        Label #ColorArtistLabel {
+          Anchor: (Width: 70, Top: 6);
+          Style: (...$C.@DefaultLabelStyle, FontSize: 12, TextColor: #c5cdd6);
+          Text: "";
+        }
+        $C.@TextField #ColorArtistInput {
+          FlexWeight: 1;
+          Anchor: (Height: 32);
+          PlaceholderText: "#9aa0a6";
+        }
+      }
+
+      Group #ColorTimeRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 6, Height: 32);
+        Label #ColorTimeLabel {
+          Anchor: (Width: 70, Top: 6);
+          Style: (...$C.@DefaultLabelStyle, FontSize: 12, TextColor: #c5cdd6);
+          Text: "";
+        }
+        $C.@TextField #ColorTimeInput {
+          FlexWeight: 1;
+          Anchor: (Height: 32);
+          PlaceholderText: "#6b7280";
+        }
+      }
+
+      Group #ColorButtons {
+        LayoutMode: Left;
+        Anchor: (Bottom: 14);
+
+        $C.@TextButton #ApplyColorsButton {
+          FlexWeight: 1;
+          Anchor: (Right: 6, Height: 32);
+          Text: "";
+        }
+
+        $C.@SecondaryTextButton #ResetColorsButton {
+          FlexWeight: 1;
+          Anchor: (Height: 32);
           Text: "";
         }
       }

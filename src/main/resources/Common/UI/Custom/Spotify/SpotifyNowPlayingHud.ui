@@ -1,60 +1,67 @@
 $C = "../Common.ui";
 $S = "../Spotify/SpotifyCommon.ui";
 
+/*
+  Base = MEDIUM.
+  Structure: main row (cover + titles) then full-width progress under it — always inside the panel.
+  Sizes are overwritten together in SpotifyHudLayout.applyAppearance.
+*/
 Group #SpotifyHudRoot {
   LayoutMode: Top;
-  Anchor: (Bottom: 24, Left: 24, Width: 440);
+  Anchor: (Bottom: 24, Left: 24, Width: 300);
 
   Group #SpotifyHudPanel {
     LayoutMode: Top;
-    Background: (TexturePath: "../Textures/Spotify/HudPanel.png", HorizontalBorder: 24, VerticalBorder: 20);
-    Padding: (Horizontal: 12, Vertical: 10);
+    Background: (TexturePath: "../Textures/Spotify/HudPanel.png", HorizontalBorder: 20, VerticalBorder: 16);
+    Padding: (Horizontal: 10, Vertical: 8);
 
-    Group #ContentInset {
+    Group #MainRow {
       LayoutMode: Left;
-      Padding: (Horizontal: 6);
+      Anchor: (Height: 48, Bottom: 6);
 
       Group #AlbumArtBox {
         LayoutMode: Middle;
-        Anchor: (Width: 64, Height: 64, Right: 12);
+        Anchor: (Width: 48, Height: 48, Right: 10);
 
         AssetImage #AlbumArt {
-          Anchor: (Width: 64, Height: 64);
+          Anchor: (Width: 48, Height: 48);
           FallbackTexturePath: "UI/Custom/Pages/Memories/MissingIcon.png";
+          MaskTexturePath: "../Textures/Spotify/CoverMask.png";
         }
       }
 
       Group #TextColumn {
         LayoutMode: Top;
         FlexWeight: 1;
-        Anchor: (Height: 64);
+        Anchor: (Height: 48);
 
         Label #TrackLine {
           Style: $S.@SpotifyTrackStyle;
-          Anchor: (Bottom: 2);
+          Anchor: (Height: 22, Bottom: 2);
           Text: "";
         }
 
         Label #ArtistLine {
           Style: $S.@SpotifyArtistStyle;
-          Anchor: (Bottom: 8);
+          Anchor: (Height: 18);
           Text: "";
         }
+      }
+    }
 
-        Group #ProgressSection {
-          LayoutMode: Top;
+    Group #ProgressSection {
+      LayoutMode: Top;
+      Anchor: (Height: 18);
 
-          Label #TimeBadge {
-            Anchor: (Bottom: 4);
-            Style: (...$S.@SpotifyTimeStyle, HorizontalAlignment: End);
-            Text: "";
-          }
+      Label #TimeBadge {
+        Anchor: (Height: 11, Bottom: 2);
+        Style: (...$S.@SpotifyTimeStyle, HorizontalAlignment: End);
+        Text: "";
+      }
 
-          $S.@SpotifyProgressBar #TrackProgressBar {
-            @Anchor = (Left: 0, Right: 0);
-            Value: 0.0;
-          }
-        }
+      $S.@SpotifyProgressBar #TrackProgressBar {
+        @Anchor = (Left: 0, Right: 0, Height: 4);
+        Value: 0.0;
       }
     }
   }

@@ -23,6 +23,13 @@ spotify.ui.panel.posTopLeft=GL
 spotify.ui.panel.posTopRight=GP
 spotify.ui.panel.openControls=Odtwarzanie
 spotify.ui.panel.close=Zamknij
+spotify.ui.panel.colors=Kolory HUD (hex)
+spotify.ui.panel.colorTrack=Tytul
+spotify.ui.panel.colorArtist=Artysta
+spotify.ui.panel.colorTime=Czas
+spotify.ui.panel.applyColors=Zastosuj
+spotify.ui.panel.resetColors=Reset
+spotify.ui.panel.colorsInvalid=Zly hex (uzyj #RRGGBB).
 
 spotify.oauth.copiedToClipboard=Adres skopiowany. Wklej w przegladarce (Ctrl+V).
 spotify.oauth.copyFailed=Schowek nie zadzialal. Zaznacz adres (Ctrl+A / Ctrl+C).
@@ -30,6 +37,10 @@ spotify.oauth.copyFailed=Schowek nie zadzialal. Zaznacz adres (Ctrl+A / Ctrl+C).
 spotify.hud.notConfigured=Uzyj /musicdisplay aby polaczyc
 
 spotify.controls.title=Odtwarzanie
+spotify.controls.search=Szukaj
+spotify.controls.searchPlaceholder=Wpisz nazwe utworu…
+spotify.controls.searchHint=Wyniki od razu podczas wpisywania
+spotify.controls.searchPlaying=Odtwarzam: {track}
 spotify.controls.prev=Wstecz
 spotify.controls.play=Play
 spotify.controls.pause=Pauza

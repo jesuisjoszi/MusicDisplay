@@ -2,8 +2,8 @@ plugins {
     id("hytale-mod") version "0.+"
 }
 
-group = "com.jagod"
-version = "0.2.6"
+group = "com.joszza"
+version = "0.1.3"
 val javaVersion = 25
 
 repositories {

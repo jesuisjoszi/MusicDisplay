@@ -23,6 +23,13 @@ spotify.ui.panel.posTopLeft=TL
 spotify.ui.panel.posTopRight=TR
 spotify.ui.panel.openControls=Playback
 spotify.ui.panel.close=Close
+spotify.ui.panel.colors=HUD colors (hex)
+spotify.ui.panel.colorTrack=Title
+spotify.ui.panel.colorArtist=Artist
+spotify.ui.panel.colorTime=Time
+spotify.ui.panel.applyColors=Apply colors
+spotify.ui.panel.resetColors=Reset
+spotify.ui.panel.colorsInvalid=Invalid hex color (use #RRGGBB).
 
 spotify.ui.setup.saved=Spotify connected. HUD enabled.
 
@@ -39,6 +46,10 @@ spotify.hud.notConfigured=Use /musicdisplay to connect
 spotify.hud.windowsUnavailable=Windows media unavailable
 
 spotify.controls.title=Playback
+spotify.controls.search=Search
+spotify.controls.searchPlaceholder=Type a song name…
+spotify.controls.searchHint=Results update as you type
+spotify.controls.searchPlaying=Playing: {track}
 spotify.controls.prev=Prev
 spotify.controls.play=Play
 spotify.controls.pause=Pause

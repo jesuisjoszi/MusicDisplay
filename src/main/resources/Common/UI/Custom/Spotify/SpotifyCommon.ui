@@ -8,8 +8,8 @@ $C = "../Common.ui";
 @SpotifyAccent = #5ce1e6;
 
 @SpotifyTitleStyle = (...$C.@DefaultLabelStyle, FontSize: 11, TextColor: @SpotifyGreen, RenderBold: true, RenderUppercase: true);
-@SpotifyTrackStyle = (...$C.@DefaultLabelStyle, FontSize: 14, TextColor: @SpotifyTextPrimary, RenderBold: true, Wrap: true);
-@SpotifyArtistStyle = (...$C.@DefaultLabelStyle, FontSize: 11, TextColor: @SpotifyTextMuted, Wrap: true);
+@SpotifyTrackStyle = (...$C.@DefaultLabelStyle, FontSize: 14, TextColor: @SpotifyTextPrimary, RenderBold: true, Wrap: false);
+@SpotifyArtistStyle = (...$C.@DefaultLabelStyle, FontSize: 11, TextColor: @SpotifyTextMuted, Wrap: false);
 @SpotifyTimeStyle = (...$C.@DefaultLabelStyle, FontSize: 9, TextColor: #6b7280);
 @SpotifyBadgeStyle = (...$C.@DefaultLabelStyle, FontSize: 10, TextColor: @SpotifyAccent, RenderBold: true, RenderUppercase: true);
 

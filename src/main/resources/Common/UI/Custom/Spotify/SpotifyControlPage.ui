@@ -96,6 +96,17 @@ $C.@PageOverlay {
         }
       }
 
+      Group #AlbumArtCheckRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 6);
+        $C.@CheckBox #AlbumArtCheck {}
+        Label #AlbumArtCheckLabel {
+          Text: "";
+          Style: (...$C.@DefaultLabelStyle, VerticalAlignment: Center);
+          Anchor: (Left: 10);
+        }
+      }
+
       Group #TrackNotifyRow {
         LayoutMode: Left;
         Anchor: (Bottom: 12);

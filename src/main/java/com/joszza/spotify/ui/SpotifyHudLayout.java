@@ -21,13 +21,17 @@ public final class SpotifyHudLayout {
     public static void applyAppearance(@Nonnull UICommandBuilder builder, @Nonnull SpotifyPlayerComponent state) {
         applyRootAnchor(builder, state);
         SpotifyHudScale scale = state.getHudScale();
-        int cover = scale.getCoverSize();
+        boolean albumOn = state.isHudAlbumArtVisible();
+        int rowHeight = albumOn ? scale.getCoverSize() : scale.getTextOnlyRowHeight();
         int gap = scale.getCoverGap();
 
-        builder.setObject("#MainRow.Anchor", heightBottom(cover, scale.getMainRowBottomGap()));
-        builder.setObject("#AlbumArtBox.Anchor", box(cover, cover, gap));
-        builder.setObject("#AlbumArt.Anchor", size(cover, cover));
-        builder.setObject("#TextColumn.Anchor", heightOnly(cover));
+        builder.setObject("#MainRow.Anchor", heightBottom(rowHeight, scale.getMainRowBottomGap()));
+        builder.set("#AlbumArtBox.Visible", albumOn);
+        if (albumOn) {
+            builder.setObject("#AlbumArtBox.Anchor", box(scale.getCoverSize(), scale.getCoverSize(), gap));
+            builder.setObject("#AlbumArt.Anchor", size(scale.getCoverSize(), scale.getCoverSize()));
+        }
+        builder.setObject("#TextColumn.Anchor", heightOnly(rowHeight));
         builder.setObject("#TrackLine.Anchor", heightBottom(scale.getTrackRowHeight(), 2));
         builder.setObject("#ArtistLine.Anchor", heightOnly(scale.getArtistRowHeight()));
         builder.setObject("#ProgressSection.Anchor", heightOnly(scale.getProgressSectionHeight()));

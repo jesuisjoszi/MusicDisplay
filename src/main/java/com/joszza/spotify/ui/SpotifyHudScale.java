@@ -94,6 +94,11 @@ public enum SpotifyHudScale {
         return artistRowHeight;
     }
 
+    /** Main-row height when album art is hidden (titles only). */
+    public int getTextOnlyRowHeight() {
+        return trackRowHeight + artistRowHeight + 2;
+    }
+
     public int getProgressSectionHeight() {
         return progressSectionHeight;
     }
@@ -104,6 +109,14 @@ public enum SpotifyHudScale {
 
     public int getMaxArtistChars() {
         return maxArtistChars;
+    }
+
+    public int getMaxTrackChars(boolean albumArtVisible) {
+        return albumArtVisible ? maxTrackChars : maxTrackChars + 10;
+    }
+
+    public int getMaxArtistChars(boolean albumArtVisible) {
+        return albumArtVisible ? maxArtistChars : maxArtistChars + 12;
     }
 
     @Nonnull

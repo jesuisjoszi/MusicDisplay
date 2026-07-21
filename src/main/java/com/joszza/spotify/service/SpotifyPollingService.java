@@ -157,6 +157,11 @@ public final class SpotifyPollingService {
             return;
         }
 
+        // Safe window: flush any cover that was waiting on UI / rebuild cooldown.
+        if (state.isHudAlbumArtVisible()) {
+            SpotifyAlbumArtService.tryFlush(playerRef, player);
+        }
+
         SpotifyNowPlayingHud hud = SpotifyHudSupport.obtainHud(player, playerRef);
         if (fetchApi) {
             hud.refresh(playerRef, state, info);

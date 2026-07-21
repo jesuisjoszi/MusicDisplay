@@ -11,6 +11,7 @@ spotify.ui.panel.setupUrlHint=Paste this URL in your browser:
 spotify.ui.panel.display=Display
 spotify.ui.panel.hudCheck=Show now-playing HUD
 spotify.ui.panel.progressCheck=Show progress bar
+spotify.ui.panel.albumArtCheck=Show album cover
 spotify.ui.panel.trackNotifyCheck=Notify on track change
 spotify.ui.panel.position=Corner
 spotify.ui.panel.size=Size

@@ -2,6 +2,7 @@ package com.joszza.spotify.ui;
 
 import com.joszza.spotify.data.SpotifyPlayerComponent;
 import com.joszza.spotify.oauth.SpotifyOAuthService;
+import com.joszza.spotify.service.SpotifyAlbumArtService;
 import com.joszza.spotify.service.SpotifyPollingService;
 import com.joszza.spotify.windows.WindowsMediaManager;
 import com.hypixel.hytale.codec.Codec;
@@ -54,6 +55,7 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         commandBuilder.set("#DisplayLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.display"));
         commandBuilder.set("#HudCheckLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.hudCheck"));
         commandBuilder.set("#ProgressCheckLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.progressCheck"));
+        commandBuilder.set("#AlbumArtCheckLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.albumArtCheck"));
         commandBuilder.set("#TrackNotifyCheckLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.trackNotifyCheck"));
         commandBuilder.set("#PositionLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.position"));
         commandBuilder.set("#SizeLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.size"));
@@ -90,6 +92,7 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         bind(eventBuilder, "Close", "#CloseButton");
         bindCheck(eventBuilder, "ToggleHud", "#HudCheck");
         bindCheck(eventBuilder, "ToggleProgress", "#ProgressCheck");
+        bindCheck(eventBuilder, "ToggleAlbumArt", "#AlbumArtCheck");
         bindCheck(eventBuilder, "ToggleTrackNotify", "#TrackNotifyCheck");
         eventBuilder.addEventBinding(
             CustomUIEventBindingType.Activating,
@@ -122,6 +125,7 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
             case "SizeMedium" -> setScale(ref, store, SpotifyHudScale.MEDIUM);
             case "SizeLarge" -> setScale(ref, store, SpotifyHudScale.LARGE);
             case "ToggleProgress" -> setProgressVisible(ref, store, data.checked);
+            case "ToggleAlbumArt" -> setAlbumArtVisible(ref, store, data.checked);
             case "ToggleTrackNotify" -> setTrackNotify(ref, store, data.checked);
             case "ApplyColors" -> applyColors(ref, store, data.trackColor, data.artistColor, data.timeColor);
             case "ResetColors" -> resetColors(ref, store);
@@ -245,6 +249,24 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         pushState(ref, store);
     }
 
+    private void setAlbumArtVisible(
+        @Nonnull Ref<EntityStore> ref,
+        @Nonnull Store<EntityStore> store,
+        @Nullable Boolean checked
+    ) {
+        SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
+        PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
+        if (state == null || checked == null) {
+            return;
+        }
+        state.setHudAlbumArtVisible(checked);
+        if (!checked && playerRef != null) {
+            SpotifyAlbumArtService.clearPlayer(playerRef.getUuid());
+        }
+        refreshHud(ref, store);
+        pushState(ref, store);
+    }
+
     private void setTrackNotify(
         @Nonnull Ref<EntityStore> ref,
         @Nonnull Store<EntityStore> store,
@@ -343,9 +365,11 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
 
         boolean hudOn = state != null && state.isHudEnabled();
         boolean progressOn = state == null || state.isHudProgressVisible();
+        boolean albumOn = state == null || state.isHudAlbumArtVisible();
         boolean notifyOn = state == null || state.isTrackChangeNotify();
         builder.set("#HudCheck.Value", hudOn);
         builder.set("#ProgressCheck.Value", progressOn);
+        builder.set("#AlbumArtCheck.Value", albumOn);
         builder.set("#TrackNotifyCheck.Value", notifyOn);
 
         SpotifyHudPosition pos = state != null ? state.getHudPosition() : SpotifyHudPosition.BOTTOM_LEFT;

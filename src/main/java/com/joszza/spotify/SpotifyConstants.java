@@ -18,8 +18,8 @@ public final class SpotifyConstants {
     public static final long OAUTH_SESSION_TTL_MS = 15L * 60L * 1000L;
 
     public static final String ALBUM_ART_SLOT_PATH = "UI/Custom/Spotify/CoverSlot.png";
-    public static final String ALBUM_ART_PLACEHOLDER = ALBUM_ART_SLOT_PATH;
     public static final String ALBUM_ART_FALLBACK = "UI/Custom/Pages/Memories/MissingIcon.png";
+    public static final String ALBUM_ART_PLACEHOLDER = ALBUM_ART_SLOT_PATH;
 
     private SpotifyConstants() {}
 }

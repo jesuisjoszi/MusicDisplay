@@ -40,7 +40,7 @@ public final class SpotifyNowPlayingHud extends CustomUIHud {
 
         if (!state.getMusicSource().isWindows() && !state.hasCredentials()) {
             applyIdle(builder, Message.translation("spotify.spotify.hud.notConfigured"));
-            clearCover(builder);
+            clearCover(builder, state);
             lastContentKey = "idle:auth";
             update(false, builder);
             return;
@@ -49,7 +49,7 @@ public final class SpotifyNowPlayingHud extends CustomUIHud {
         if (state.getMusicSource().isWindows()
             && info.getStatus() == SpotifyNowPlayingInfo.Status.ERROR) {
             applyIdle(builder, Message.translation("spotify.spotify.hud.windowsUnavailable"));
-            clearCover(builder);
+            clearCover(builder, state);
             lastContentKey = "idle:win";
             update(false, builder);
             return;
@@ -57,7 +57,7 @@ public final class SpotifyNowPlayingHud extends CustomUIHud {
 
         switch (info.getStatus()) {
             case PLAYING, PAUSED -> {
-                String contentKey = contentKey(info, state.isHudProgressVisible());
+                String contentKey = contentKey(info, state);
                 if (!contentKey.equals(lastContentKey)) {
                     applyTrack(
                         builder,
@@ -68,7 +68,7 @@ public final class SpotifyNowPlayingHud extends CustomUIHud {
                         now,
                         state.isHudProgressVisible()
                     );
-                    applyCover(builder, playerRef, info);
+                    applyCover(builder, playerRef, state, info);
                     lastContentKey = contentKey;
                     dirty = true;
                 } else {
@@ -79,7 +79,7 @@ public final class SpotifyNowPlayingHud extends CustomUIHud {
             case IDLE -> {
                 if (!"idle".equals(lastContentKey)) {
                     applyIdle(builder, Message.translation("spotify.spotify.hud.idle"));
-                    clearCover(builder);
+                    clearCover(builder, state);
                     lastContentKey = "idle";
                     dirty = true;
                 }
@@ -90,7 +90,7 @@ public final class SpotifyNowPlayingHud extends CustomUIHud {
                 builder.set("#TimeBadge.TextSpans", Message.raw(""));
                 builder.set("#TimeBadge.Visible", false);
                 builder.set("#ProgressSection.Visible", false);
-                clearCover(builder);
+                clearCover(builder, state);
                 lastContentKey = "error";
                 dirty = true;
             }
@@ -143,45 +143,57 @@ public final class SpotifyNowPlayingHud extends CustomUIHud {
             + "|" + state.getHudOffsetX()
             + "|" + state.getHudOffsetY()
             + "|" + state.isHudProgressVisible()
+            + "|" + state.isHudAlbumArtVisible()
             + "|" + Objects.toString(state.getHudTrackColor(), "")
             + "|" + Objects.toString(state.getHudArtistColor(), "")
             + "|" + Objects.toString(state.getHudTimeColor(), "");
     }
 
     @Nonnull
-    private static String contentKey(@Nonnull SpotifyNowPlayingInfo info, boolean progressVisible) {
+    private static String contentKey(@Nonnull SpotifyNowPlayingInfo info, @Nonnull SpotifyPlayerComponent state) {
         return safe(info.getTrackName(), "")
             + "|" + safe(info.getArtistName(), "")
             + "|" + info.getStatus().name()
             + "|" + Objects.toString(info.getAlbumArtUrl(), "")
             + "|" + Objects.toString(info.getLocalArtPath(), "")
-            + "|" + progressVisible
+            + "|" + state.isHudProgressVisible()
+            + "|" + state.isHudAlbumArtVisible()
             + "|" + info.getDurationMs();
     }
 
     private static void applyCover(
         @Nonnull UICommandBuilder builder,
         @Nonnull PlayerRef playerRef,
+        @Nonnull SpotifyPlayerComponent state,
         @Nonnull SpotifyNowPlayingInfo info
     ) {
-        String assetPath = null;
+        if (!state.isHudAlbumArtVisible()) {
+            builder.set("#AlbumArtBox.Visible", false);
+            return;
+        }
+        builder.set("#AlbumArtBox.Visible", true);
+        String assetPath;
         if (info.getAlbumArtUrl() != null) {
             assetPath = SpotifyAlbumArtService.resolveRemote(playerRef, info.getAlbumArtUrl());
         } else if (info.getLocalArtPath() != null) {
             String cacheKey = safe(info.getTrackName(), "track") + "|" + safe(info.getArtistName(), "artist");
             assetPath = SpotifyAlbumArtService.resolveLocalFile(playerRef, info.getLocalArtPath(), cacheKey);
+        } else {
+            assetPath = SpotifyConstants.ALBUM_ART_FALLBACK;
         }
         builder.set("#AlbumArt.Visible", true);
-        builder.set(
-            "#AlbumArt.AssetPath",
-            assetPath != null ? assetPath : SpotifyAlbumArtService.placeholderPath()
-        );
+        builder.set("#AlbumArt.AssetPath", assetPath);
         builder.set("#AlbumArt.FallbackTexturePath", SpotifyConstants.ALBUM_ART_FALLBACK);
     }
 
-    private static void clearCover(@Nonnull UICommandBuilder builder) {
+    private static void clearCover(@Nonnull UICommandBuilder builder, @Nonnull SpotifyPlayerComponent state) {
+        if (!state.isHudAlbumArtVisible()) {
+            builder.set("#AlbumArtBox.Visible", false);
+            return;
+        }
+        builder.set("#AlbumArtBox.Visible", true);
         builder.set("#AlbumArt.Visible", true);
-        builder.set("#AlbumArt.AssetPath", SpotifyConstants.ALBUM_ART_PLACEHOLDER);
+        builder.set("#AlbumArt.AssetPath", SpotifyConstants.ALBUM_ART_FALLBACK);
         builder.set("#AlbumArt.FallbackTexturePath", SpotifyConstants.ALBUM_ART_FALLBACK);
     }
 
@@ -195,8 +207,9 @@ public final class SpotifyNowPlayingHud extends CustomUIHud {
         boolean showProgress
     ) {
         SpotifyHudScale scale = state.getHudScale();
-        builder.set("#TrackLine.TextSpans", Message.raw(ellipsis(track, scale.getMaxTrackChars())));
-        builder.set("#ArtistLine.TextSpans", Message.raw(ellipsis(artist, scale.getMaxArtistChars())));
+        boolean albumOn = state.isHudAlbumArtVisible();
+        builder.set("#TrackLine.TextSpans", Message.raw(ellipsis(track, scale.getMaxTrackChars(albumOn))));
+        builder.set("#ArtistLine.TextSpans", Message.raw(ellipsis(artist, scale.getMaxArtistChars(albumOn))));
         applyProgressOnly(builder, info, nowMs, showProgress);
     }
 

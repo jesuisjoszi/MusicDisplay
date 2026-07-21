@@ -50,6 +50,12 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
         .append(new KeyedCodec<>("HudProgressVisible", Codec.BOOLEAN), (c, v) -> c.hudProgressVisible = v == null || v, c -> c.hudProgressVisible)
         .add()
         .append(
+            new KeyedCodec<>("HudAlbumArtVisible", Codec.BOOLEAN),
+            (c, v) -> c.hudAlbumArtVisible = v == null || v,
+            c -> c.hudAlbumArtVisible
+        )
+        .add()
+        .append(
             new KeyedCodec<>("TrackChangeNotify", Codec.BOOLEAN),
             (c, v) -> c.trackChangeNotify = v == null || v,
             c -> c.trackChangeNotify
@@ -93,6 +99,7 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
     @Nonnull
     private SpotifyHudScale hudScale = SpotifyHudScale.MEDIUM;
     private boolean hudProgressVisible = true;
+    private boolean hudAlbumArtVisible = true;
     private boolean trackChangeNotify = true;
     private int lastVolumePercent = 50;
     @Nullable
@@ -179,6 +186,10 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
 
     public boolean isHudProgressVisible() {
         return hudProgressVisible;
+    }
+
+    public boolean isHudAlbumArtVisible() {
+        return hudAlbumArtVisible;
     }
 
     public boolean isTrackChangeNotify() {
@@ -300,6 +311,10 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
         this.hudProgressVisible = hudProgressVisible;
     }
 
+    public void setHudAlbumArtVisible(boolean hudAlbumArtVisible) {
+        this.hudAlbumArtVisible = hudAlbumArtVisible;
+    }
+
     public void setTrackChangeNotify(boolean trackChangeNotify) {
         this.trackChangeNotify = trackChangeNotify;
     }
@@ -331,6 +346,7 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
         copy.hudOffsetY = hudOffsetY;
         copy.hudScale = hudScale;
         copy.hudProgressVisible = hudProgressVisible;
+        copy.hudAlbumArtVisible = hudAlbumArtVisible;
         copy.trackChangeNotify = trackChangeNotify;
         copy.lastVolumePercent = lastVolumePercent;
         copy.hudTrackColor = hudTrackColor;

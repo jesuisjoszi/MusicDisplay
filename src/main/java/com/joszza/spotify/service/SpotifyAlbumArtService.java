@@ -1,9 +1,12 @@
 package com.joszza.spotify.service;
 
+import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.HytaleServer;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.joszza.spotify.SpotifyConstants;
 import com.joszza.spotify.api.SpotifyHttpClient;
 import com.joszza.spotify.assets.DynamicCoverSender;
@@ -22,83 +25,96 @@ import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
 
 /**
- * Album covers via HyUI-style dynamic asset slots (not Icons/ItemsGenerated).
- * Downloads PNG/JPEG, converts to PNG, pushes into {@link SpotifyConstants#ALBUM_ART_SLOT_PATH}.
+ * Album covers via HyUI-style dynamic asset slots.
+ * HUD always binds the slot path; bytes are pushed only when safe (no Custom UI + soft cooldown).
  */
 public final class SpotifyAlbumArtService {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
+    private static final int COVER_PIXEL_SIZE = 64;
+
     private static final Set<String> IN_FLIGHT = ConcurrentHashMap.newKeySet();
     private static final Map<UUID, String> READY_KEY_BY_PLAYER = new ConcurrentHashMap<>();
     private static final Map<UUID, String> PENDING_KEY_BY_PLAYER = new ConcurrentHashMap<>();
+    private static final Map<UUID, PendingCover> WAITING = new ConcurrentHashMap<>();
+
+    private record PendingCover(@Nonnull String key, @Nonnull byte[] png) {}
 
     private SpotifyAlbumArtService() {}
 
     @Nonnull
-    public static String placeholderPath() {
-        return SpotifyConstants.ALBUM_ART_SLOT_PATH;
+    public static String slotPath() {
+        return DynamicCoverSender.slotPath();
     }
 
     /**
-     * @return slot asset path when this player's cover is already pushed for {@code imageUrl}; otherwise null
-     *     (download may be started in background).
+     * Always returns the slot path so AssetImage stays bound. Download starts in background when needed.
+     * Client shows pack default / previous cover until rebuild lands.
      */
-    @Nullable
+    @Nonnull
     public static String resolveRemote(@Nonnull PlayerRef playerRef, @Nullable String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) {
-            return null;
+            return SpotifyConstants.ALBUM_ART_FALLBACK;
         }
         UUID uuid = playerRef.getUuid();
-        String ready = READY_KEY_BY_PLAYER.get(uuid);
-        if (Objects.equals(ready, imageUrl)) {
-            return DynamicCoverSender.slotPath();
+        if (!Objects.equals(READY_KEY_BY_PLAYER.get(uuid), imageUrl)) {
+            requestRemote(uuid, imageUrl);
         }
-        requestRemote(playerRef, imageUrl);
-        return null;
+        return DynamicCoverSender.slotPath();
     }
 
-    @Nullable
+    @Nonnull
     public static String resolveLocalFile(@Nonnull PlayerRef playerRef, @Nullable Path file, @Nonnull String cacheKey) {
         if (file == null || !Files.isRegularFile(file)) {
-            return null;
+            return SpotifyConstants.ALBUM_ART_FALLBACK;
         }
         String key = "file:" + cacheKey;
         UUID uuid = playerRef.getUuid();
-        String ready = READY_KEY_BY_PLAYER.get(uuid);
-        if (Objects.equals(ready, key)) {
-            return DynamicCoverSender.slotPath();
+        if (!Objects.equals(READY_KEY_BY_PLAYER.get(uuid), key)) {
+            requestLocal(uuid, file, key);
         }
-        if (!IN_FLIGHT.add(uuid + "|" + key)) {
-            return null;
+        return DynamicCoverSender.slotPath();
+    }
+
+    /** Push waiting / deferred covers when Custom UI is closed. */
+    public static void tryFlush(@Nonnull PlayerRef playerRef, @Nonnull Player player) {
+        if (player.getPageManager().getCustomPage() != null) {
+            return;
         }
-        PENDING_KEY_BY_PLAYER.put(uuid, key);
-        HytaleServer.SCHEDULED_EXECUTOR.execute(() -> {
-            try {
-                byte[] raw = Files.readAllBytes(file);
-                byte[] png = toPng(raw);
-                if (png == null) {
+        UUID uuid = playerRef.getUuid();
+
+        PendingCover waiting = WAITING.get(uuid);
+        if (waiting != null) {
+            if (Objects.equals(PENDING_KEY_BY_PLAYER.get(uuid), waiting.key())) {
+                if (push(uuid, playerRef, waiting.key(), waiting.png())) {
+                    WAITING.remove(uuid, waiting);
                     return;
                 }
-                deliver(uuid, key, png);
-            } catch (Exception e) {
-                LOGGER.atFine().withCause(e).log("Local cover load failed");
-            } finally {
-                IN_FLIGHT.remove(uuid + "|" + key);
+            } else {
+                WAITING.remove(uuid, waiting);
             }
-        });
-        return null;
+        }
+
+        if (DynamicCoverSender.hasDeferred(uuid)
+            && DynamicCoverSender.flushDeferred(uuid, playerRef.getPacketHandler())) {
+            String pending = PENDING_KEY_BY_PLAYER.get(uuid);
+            if (pending != null) {
+                READY_KEY_BY_PLAYER.put(uuid, pending);
+            }
+        }
     }
 
     public static void clearPlayer(@Nonnull UUID playerUuid) {
         READY_KEY_BY_PLAYER.remove(playerUuid);
         PENDING_KEY_BY_PLAYER.remove(playerUuid);
+        WAITING.remove(playerUuid);
+        DynamicCoverSender.clearPlayer(playerUuid);
     }
 
     public static void syncFromDataDirectory() {
         DynamicCoverSender.resolveSlotHash();
     }
 
-    private static void requestRemote(@Nonnull PlayerRef playerRef, @Nonnull String imageUrl) {
-        UUID uuid = playerRef.getUuid();
+    private static void requestRemote(@Nonnull UUID uuid, @Nonnull String imageUrl) {
         String flightKey = uuid + "|" + imageUrl;
         if (!IN_FLIGHT.add(flightKey)) {
             return;
@@ -114,7 +130,7 @@ public final class SpotifyAlbumArtService {
                 if (png == null) {
                     return;
                 }
-                deliver(uuid, imageUrl, png);
+                queueOrDeliver(uuid, imageUrl, png);
             } catch (Exception e) {
                 LOGGER.atFine().withCause(e).log("Cover download failed: %s", imageUrl);
             } finally {
@@ -123,23 +139,78 @@ public final class SpotifyAlbumArtService {
         });
     }
 
-    private static void deliver(@Nonnull UUID playerUuid, @Nonnull String key, @Nonnull byte[] png) {
+    private static void requestLocal(@Nonnull UUID uuid, @Nonnull Path file, @Nonnull String key) {
+        String flightKey = uuid + "|" + key;
+        if (!IN_FLIGHT.add(flightKey)) {
+            return;
+        }
+        PENDING_KEY_BY_PLAYER.put(uuid, key);
+        HytaleServer.SCHEDULED_EXECUTOR.execute(() -> {
+            try {
+                byte[] raw = Files.readAllBytes(file);
+                byte[] png = toPng(raw);
+                if (png == null) {
+                    return;
+                }
+                queueOrDeliver(uuid, key, png);
+            } catch (Exception e) {
+                LOGGER.atFine().withCause(e).log("Local cover load failed");
+            } finally {
+                IN_FLIGHT.remove(flightKey);
+            }
+        });
+    }
+
+    private static void queueOrDeliver(@Nonnull UUID playerUuid, @Nonnull String key, @Nonnull byte[] png) {
         if (!Objects.equals(PENDING_KEY_BY_PLAYER.get(playerUuid), key)) {
             return;
         }
         PlayerRef online = findOnline(playerUuid);
         if (online == null || !online.isValid()) {
+            WAITING.put(playerUuid, new PendingCover(key, png));
             return;
         }
-        boolean ok = DynamicCoverSender.sendPngToPlayer(online.getPacketHandler(), png);
-        if (!ok) {
+        if (isCustomUiOpen(online)) {
+            WAITING.put(playerUuid, new PendingCover(key, png));
             return;
         }
-        READY_KEY_BY_PLAYER.put(playerUuid, key);
+        if (!push(playerUuid, online, key, png)) {
+            WAITING.put(playerUuid, new PendingCover(key, png));
+        }
     }
 
-    /** Smaller PNG = less asset traffic / lighter client rebuild on track change. */
-    private static final int COVER_PIXEL_SIZE = 64;
+    private static boolean push(
+        @Nonnull UUID playerUuid,
+        @Nonnull PlayerRef playerRef,
+        @Nonnull String key,
+        @Nonnull byte[] png
+    ) {
+        if (!Objects.equals(PENDING_KEY_BY_PLAYER.get(playerUuid), key)) {
+            return true;
+        }
+        if (isCustomUiOpen(playerRef)) {
+            return false;
+        }
+        boolean ok = DynamicCoverSender.sendPngToPlayer(playerUuid, playerRef.getPacketHandler(), png);
+        if (ok) {
+            READY_KEY_BY_PLAYER.put(playerUuid, key);
+            WAITING.remove(playerUuid);
+        }
+        return ok;
+    }
+
+    private static boolean isCustomUiOpen(@Nonnull PlayerRef playerRef) {
+        try {
+            Ref<EntityStore> ref = playerRef.getReference();
+            if (ref == null || !ref.isValid()) {
+                return false;
+            }
+            Player player = ref.getStore().getComponent(ref, Player.getComponentType());
+            return player != null && player.getPageManager().getCustomPage() != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     @Nullable
     private static byte[] toPng(@Nonnull byte[] raw) {
@@ -159,7 +230,6 @@ public final class SpotifyAlbumArtService {
         }
     }
 
-    /** Center-crop to square, scale, and round corners so every cover looks the same in HUD. */
     @Nonnull
     private static BufferedImage toFixedSquare(@Nonnull BufferedImage source, int size) {
         int w = Math.max(1, source.getWidth());
@@ -179,10 +249,6 @@ public final class SpotifyAlbumArtService {
             g.setRenderingHint(
                 java.awt.RenderingHints.KEY_ANTIALIASING,
                 java.awt.RenderingHints.VALUE_ANTIALIAS_ON
-            );
-            g.setRenderingHint(
-                java.awt.RenderingHints.KEY_RENDERING,
-                java.awt.RenderingHints.VALUE_RENDER_QUALITY
             );
             float radius = size * 0.18f;
             java.awt.geom.RoundRectangle2D clip =

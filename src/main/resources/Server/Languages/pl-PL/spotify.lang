@@ -11,6 +11,7 @@ spotify.ui.panel.setupUrlHint=Wklej ten adres w przegladarce:
 spotify.ui.panel.display=Wyswietlanie
 spotify.ui.panel.hudCheck=Pokaz HUD
 spotify.ui.panel.progressCheck=Pokaz pasek postepu
+spotify.ui.panel.albumArtCheck=Pokaz okladke albumu
 spotify.ui.panel.trackNotifyCheck=Powiadomienie przy zmianie utworu
 spotify.ui.panel.position=Rog
 spotify.ui.panel.size=Rozmiar

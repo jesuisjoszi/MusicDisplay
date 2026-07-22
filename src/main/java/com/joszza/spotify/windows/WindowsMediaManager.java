@@ -6,13 +6,11 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import com.joszza.spotify.SpotifyPlugin;
 import com.joszza.spotify.api.SpotifyNowPlayingInfo;
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,14 +19,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Windows SMTC bridge (same approach as Minecraft musicdisplay).
- * Extracts and launches {@code SMTCBridge.exe}, reads JSON status lines from stdout.
- * Works only when the Hytale server runs on the same Windows PC as the media player.
+ * Windows SMTC bridge (optional, local-only).
+ * Does <b>not</b> ship an .exe in the mod jar (CurseForge). If {@code SMTCBridge.exe} is placed
+ * manually in the plugin data directory, it can be launched; otherwise Windows media stays unavailable.
  */
 public final class WindowsMediaManager {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
     private static final WindowsMediaManager INSTANCE = new WindowsMediaManager();
-    private static final String RESOURCE_PATH = "/native/SMTCBridge.exe";
+    private static final String BRIDGE_FILE_NAME = "SMTCBridge.exe";
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "MusicDisplay-SMTC");
@@ -80,7 +78,15 @@ public final class WindowsMediaManager {
         }
         executor.execute(() -> {
             try {
-                extractBridge();
+                if (!resolveBridgeExe()) {
+                    LOGGER.atInfo().log(
+                        "Windows media disabled: place %s in the plugin data folder to enable (not bundled)",
+                        BRIDGE_FILE_NAME
+                    );
+                    running.set(false);
+                    bridgeReady = false;
+                    return;
+                }
                 launchBridge();
             } catch (Exception e) {
                 LOGGER.atWarning().withCause(e).log("Failed to start SMTC bridge");
@@ -136,21 +142,22 @@ public final class WindowsMediaManager {
         sendCommand("volume " + clamped);
     }
 
-    private void extractBridge() throws Exception {
+    /** Looks for a user-provided bridge binary — nothing is extracted from the jar. */
+    private boolean resolveBridgeExe() throws Exception {
         SpotifyPlugin plugin = SpotifyPlugin.get();
         if (plugin == null) {
-            throw new IllegalStateException("Plugin not loaded");
+            return false;
         }
         Path dataDir = plugin.getDataDirectory();
         Files.createDirectories(dataDir);
-        bridgeExePath = dataDir.resolve("SMTCBridge.exe");
-        try (InputStream in = WindowsMediaManager.class.getResourceAsStream(RESOURCE_PATH)) {
-            if (in == null) {
-                throw new IllegalStateException("Missing resource " + RESOURCE_PATH);
-            }
-            Files.copy(in, bridgeExePath, StandardCopyOption.REPLACE_EXISTING);
+        Path candidate = dataDir.resolve(BRIDGE_FILE_NAME);
+        if (!Files.isRegularFile(candidate)) {
+            bridgeExePath = null;
+            return false;
         }
-        LOGGER.atInfo().log("Extracted SMTC bridge to %s", bridgeExePath);
+        bridgeExePath = candidate;
+        LOGGER.atInfo().log("Using local SMTC bridge at %s", bridgeExePath);
+        return true;
     }
 
     private void launchBridge() {

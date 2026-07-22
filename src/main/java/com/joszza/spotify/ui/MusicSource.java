@@ -4,22 +4,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public enum MusicSource {
-    SPOTIFY,
-    WINDOWS;
+    SPOTIFY;
 
     @Nonnull
     public static MusicSource fromString(@Nullable String raw) {
-        if (raw == null || raw.isBlank()) {
-            return SPOTIFY;
-        }
-        try {
-            return valueOf(raw.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return SPOTIFY;
-        }
-    }
-
-    public boolean isWindows() {
-        return this == WINDOWS;
+        // Legacy "WINDOWS" values from older installs map to Spotify (Windows bridge removed).
+        return SPOTIFY;
     }
 }

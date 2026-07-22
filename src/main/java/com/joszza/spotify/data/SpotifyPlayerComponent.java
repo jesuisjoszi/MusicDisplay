@@ -229,13 +229,7 @@ public final class SpotifyPlayerComponent implements Component<EntityStore> {
     }
 
     public boolean canShowHud() {
-        if (!hudEnabled) {
-            return false;
-        }
-        if (musicSource.isWindows()) {
-            return true;
-        }
-        return hasCredentials();
+        return hudEnabled && hasCredentials();
     }
 
     @Nullable

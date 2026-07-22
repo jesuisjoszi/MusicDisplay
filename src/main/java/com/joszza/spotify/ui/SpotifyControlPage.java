@@ -4,7 +4,6 @@ import com.joszza.spotify.data.SpotifyPlayerComponent;
 import com.joszza.spotify.oauth.SpotifyOAuthService;
 import com.joszza.spotify.service.SpotifyAlbumArtService;
 import com.joszza.spotify.service.SpotifyPollingService;
-import com.joszza.spotify.windows.WindowsMediaManager;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
@@ -47,7 +46,6 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
 
         commandBuilder.set("#PanelTitle.TextSpans", Message.translation("spotify.spotify.ui.panel.title"));
-        commandBuilder.set("#SourceLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.source"));
         commandBuilder.set("#SetupSpotifyButton.TextSpans", Message.translation("spotify.spotify.ui.panel.setup"));
         commandBuilder.set("#SetupUrlLabel.TextSpans", Message.translation("spotify.spotify.ui.panel.setupUrlHint"));
         commandBuilder.set("#SetupUrlSection.Visible", false);
@@ -78,8 +76,6 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         applyState(commandBuilder, state);
 
         bind(eventBuilder, "Setup", "#SetupSpotifyButton");
-        bind(eventBuilder, "SourceSpotify", "#SourceSpotify");
-        bind(eventBuilder, "SourceWindows", "#SourceWindows");
         bind(eventBuilder, "PosBottomLeft", "#PosBottomLeft");
         bind(eventBuilder, "PosBottomRight", "#PosBottomRight");
         bind(eventBuilder, "PosTopLeft", "#PosTopLeft");
@@ -114,8 +110,6 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         switch (data.action) {
             case "Close" -> close();
             case "Setup" -> startBrowserSetup(ref, store);
-            case "SourceSpotify" -> setMusicSource(ref, store, MusicSource.SPOTIFY);
-            case "SourceWindows" -> setMusicSource(ref, store, MusicSource.WINDOWS);
             case "ToggleHud" -> setHudEnabled(ref, store, data.checked);
             case "PosBottomLeft" -> setPosition(ref, store, SpotifyHudPosition.BOTTOM_LEFT);
             case "PosBottomRight" -> setPosition(ref, store, SpotifyHudPosition.BOTTOM_RIGHT);
@@ -143,26 +137,6 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
         close();
         player.getPageManager().openCustomPage(ref, store, new SpotifyControlsPage(playerRef));
         SpotifyPollingService.refreshPlayerNow(ref, store);
-    }
-
-    private void setMusicSource(
-        @Nonnull Ref<EntityStore> ref,
-        @Nonnull Store<EntityStore> store,
-        @Nonnull MusicSource source
-    ) {
-        SpotifyPlayerComponent state = store.getComponent(ref, SpotifyPlayerComponent.getComponentType());
-        if (state == null) {
-            return;
-        }
-        state.setMusicSource(source);
-        if (source.isWindows()) {
-            state.setHudEnabled(true);
-            if (WindowsMediaManager.isOsWindows() && !WindowsMediaManager.get().isReady()) {
-                WindowsMediaManager.get().start();
-            }
-        }
-        refreshHud(ref, store);
-        pushState(ref, store);
     }
 
     private void startBrowserSetup(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
@@ -343,25 +317,11 @@ public final class SpotifyControlPage extends InteractiveCustomUIPage<SpotifyCon
     }
 
     private static void applyState(@Nonnull UICommandBuilder builder, @Nullable SpotifyPlayerComponent state) {
-        MusicSource source = state != null ? state.getMusicSource() : MusicSource.SPOTIFY;
-
-        if (source.isWindows()) {
-            if (WindowsMediaManager.get().isReady()) {
-                builder.set("#StatusLine.TextSpans", Message.translation("spotify.spotify.ui.panel.windowsReady"));
-            } else {
-                builder.set("#StatusLine.TextSpans", Message.translation("spotify.spotify.ui.panel.windowsNotReady"));
-            }
-        } else if (state != null && state.hasCredentials()) {
+        if (state != null && state.hasCredentials()) {
             builder.set("#StatusLine.TextSpans", Message.translation("spotify.spotify.ui.panel.connected"));
         } else {
             builder.set("#StatusLine.TextSpans", Message.translation("spotify.spotify.ui.panel.notConnected"));
         }
-
-        builder.set("#SourceSpotify.TextSpans", Message.translation("spotify.spotify.ui.panel.sourceSpotify"));
-        builder.set("#SourceWindows.TextSpans", Message.translation("spotify.spotify.ui.panel.sourceWindows"));
-        builder.set("#SourceSpotify.Disabled", source == MusicSource.SPOTIFY);
-        builder.set("#SourceWindows.Disabled", source == MusicSource.WINDOWS);
-        builder.set("#SetupSpotifyButton.Visible", source == MusicSource.SPOTIFY);
 
         boolean hudOn = state != null && state.isHudEnabled();
         boolean progressOn = state == null || state.isHudProgressVisible();

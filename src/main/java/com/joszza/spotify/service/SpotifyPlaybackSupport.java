@@ -2,7 +2,6 @@ package com.joszza.spotify.service;
 
 import com.joszza.spotify.api.SpotifyProfile;
 import com.joszza.spotify.data.SpotifyPlayerComponent;
-import com.joszza.spotify.windows.WindowsMediaManager;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
@@ -24,14 +23,6 @@ public final class SpotifyPlaybackSupport {
     public static Result setVolume(@Nonnull SpotifyPlayerComponent state, int volumePercent) {
         int clamped = Math.max(0, Math.min(100, volumePercent));
         state.setLastVolumePercent(clamped);
-        if (state.getMusicSource().isWindows()) {
-            WindowsMediaManager media = WindowsMediaManager.get();
-            if (!WindowsMediaManager.isOsWindows() || !media.isReady()) {
-                return Result.WINDOWS_UNAVAILABLE;
-            }
-            media.setVolume(clamped);
-            return Result.OK;
-        }
         if (!state.hasCredentials()) {
             return Result.NOT_CONNECTED;
         }
@@ -45,9 +36,6 @@ public final class SpotifyPlaybackSupport {
     }
 
     public static int readVolumePercent(@Nonnull SpotifyPlayerComponent state) {
-        if (state.getMusicSource().isWindows()) {
-            return WindowsMediaManager.get().getVolumePercent();
-        }
         int fromApi = SpotifyPlaybackService.getVolumePercent(state);
         if (fromApi >= 0) {
             state.setLastVolumePercent(fromApi);
@@ -63,7 +51,6 @@ public final class SpotifyPlaybackSupport {
         FORBIDDEN,
         MISSING_SCOPE,
         PREMIUM_REQUIRED,
-        WINDOWS_UNAVAILABLE,
         API_ERROR
     }
 
@@ -71,9 +58,6 @@ public final class SpotifyPlaybackSupport {
 
     @Nonnull
     public static Result run(@Nonnull SpotifyPlayerComponent state, @Nonnull Action action) {
-        if (state.getMusicSource().isWindows()) {
-            return runWindows(action);
-        }
         Result gate = gateSpotify(state);
         if (gate != null) {
             return gate;
@@ -104,20 +88,6 @@ public final class SpotifyPlaybackSupport {
         return null;
     }
 
-    @Nonnull
-    private static Result runWindows(@Nonnull Action action) {
-        WindowsMediaManager media = WindowsMediaManager.get();
-        if (!WindowsMediaManager.isOsWindows() || !media.isReady()) {
-            return Result.WINDOWS_UNAVAILABLE;
-        }
-        switch (action) {
-            case NEXT -> media.next();
-            case PREVIOUS -> media.previous();
-            case PLAY, PAUSE, TOGGLE -> media.playPause();
-        }
-        return Result.OK;
-    }
-
     public static void apply(
         @Nonnull PlayerRef playerRef,
         @Nonnull Ref<EntityStore> ref,
@@ -132,7 +102,6 @@ public final class SpotifyPlaybackSupport {
             case FORBIDDEN -> playerRef.sendMessage(Message.translation("spotify.spotify.command.forbidden"));
             case MISSING_SCOPE -> playerRef.sendMessage(Message.translation("spotify.spotify.command.missingScope"));
             case PREMIUM_REQUIRED -> playerRef.sendMessage(Message.translation("spotify.spotify.command.premiumRequired"));
-            case WINDOWS_UNAVAILABLE -> playerRef.sendMessage(Message.translation("spotify.spotify.command.windowsUnavailable"));
             case API_ERROR -> playerRef.sendMessage(Message.translation("spotify.spotify.command.apiError"));
         }
     }

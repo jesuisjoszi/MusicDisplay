@@ -24,29 +24,6 @@ $C.@PageOverlay {
         Text: "";
       }
 
-      Label #SourceLabel {
-        Anchor: (Bottom: 6);
-        Style: (...$C.@DefaultLabelStyle, FontSize: 12, TextColor: #8b95a1);
-        Text: "";
-      }
-
-      Group #SourceButtons {
-        LayoutMode: Left;
-        Anchor: (Bottom: 12);
-
-        $C.@TextButton #SourceSpotify {
-          FlexWeight: 1;
-          Anchor: (Right: 6, Height: 34);
-          Text: "";
-        }
-
-        $C.@TextButton #SourceWindows {
-          FlexWeight: 1;
-          Anchor: (Height: 34);
-          Text: "";
-        }
-      }
-
       $C.@TextButton #SetupSpotifyButton {
         Anchor: (Height: 36, Bottom: 8);
         Text: "";

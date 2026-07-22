@@ -1,6 +1,5 @@
 package com.joszza.spotify.service;
 
-import com.joszza.spotify.windows.WindowsMediaManager;
 import com.joszza.spotify.api.SpotifyNowPlayingInfo;
 import com.joszza.spotify.data.SpotifyPlayerComponent;
 import com.joszza.spotify.ui.SpotifyHudSupport;
@@ -124,12 +123,7 @@ public final class SpotifyPollingService {
         if (fetchApi) {
             String previousTrack = state.getLastTrack();
             String previousArtist = state.getLastArtist();
-            if (state.getMusicSource().isWindows()) {
-                info = WindowsMediaManager.get().getStatus();
-                state.setLastVolumePercent(WindowsMediaManager.get().getVolumePercent());
-            } else {
-                info = SpotifyNowPlayingInfo.fetch(state);
-            }
+            info = SpotifyNowPlayingInfo.fetch(state);
             LAST_INFO.put(playerRef.getUuid(), info);
             state.setNowPlaying(info.getTrackName(), info.getArtistName(), info.getStatus().name());
             maybeNotifyTrackChange(playerRef, state, previousTrack, previousArtist, info);
@@ -137,12 +131,6 @@ public final class SpotifyPollingService {
             info = LAST_INFO.get(playerRef.getUuid());
             if (info == null) {
                 return;
-            }
-            if (state.getMusicSource().isWindows()) {
-                info = WindowsMediaManager.get().getStatus();
-                LAST_INFO.put(playerRef.getUuid(), info);
-                state.setLastVolumePercent(WindowsMediaManager.get().getVolumePercent());
-                state.setNowPlaying(info.getTrackName(), info.getArtistName(), info.getStatus().name());
             }
         }
 

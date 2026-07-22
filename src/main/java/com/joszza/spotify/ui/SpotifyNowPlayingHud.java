@@ -38,19 +38,10 @@ public final class SpotifyNowPlayingHud extends CustomUIHud {
         long now = System.currentTimeMillis();
         boolean dirty = maybeApplyAppearance(builder, state);
 
-        if (!state.getMusicSource().isWindows() && !state.hasCredentials()) {
+        if (!state.hasCredentials()) {
             applyIdle(builder, Message.translation("spotify.spotify.hud.notConfigured"));
             clearCover(builder, state);
             lastContentKey = "idle:auth";
-            update(false, builder);
-            return;
-        }
-
-        if (state.getMusicSource().isWindows()
-            && info.getStatus() == SpotifyNowPlayingInfo.Status.ERROR) {
-            applyIdle(builder, Message.translation("spotify.spotify.hud.windowsUnavailable"));
-            clearCover(builder, state);
-            lastContentKey = "idle:win";
             update(false, builder);
             return;
         }

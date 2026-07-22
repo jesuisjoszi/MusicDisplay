@@ -7,7 +7,6 @@ import com.joszza.spotify.service.SpotifyAlbumArtService;
 import com.joszza.spotify.service.SpotifyControlsRegistry;
 import com.joszza.spotify.service.SpotifyPollingService;
 import com.joszza.spotify.ui.SpotifyHudSupport;
-import com.joszza.spotify.windows.WindowsMediaManager;
 import com.hypixel.hytale.assetstore.AssetPack;
 import com.hypixel.hytale.common.plugin.PluginIdentifier;
 import com.hypixel.hytale.component.Ref;
@@ -89,13 +88,11 @@ public final class SpotifyPlugin extends JavaPlugin {
         });
 
         SpotifyPollingService.start();
-        WindowsMediaManager.get().start();
         LOGGER.atInfo().log("MusicDisplay started — use /musicdisplay or /msd");
     }
 
     @Override
     protected void shutdown() {
-        WindowsMediaManager.get().stop();
         SpotifyOAuthService.shutdown();
     }
 
